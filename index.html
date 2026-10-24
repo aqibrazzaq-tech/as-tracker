@@ -738,8 +738,8 @@ document.addEventListener("click",e=>{
   const at=e.target.closest("[data-att],[data-add]");
   if(at){if(at.dataset.att)showLb(at.dataset.att,0);else pickFiles(at.dataset.add);return}
   const t=e.target.closest("[data-s],[data-u],[data-tog],[data-open],#hide");if(!t)return;
-  if(t.dataset.s){ui.subj=t.dataset.s;ui.unit="all"}
-  else if(t.dataset.u){ui.unit=t.dataset.u}
+  if(t.dataset.s){const US=(()=>{try{return JSON.parse(localStorage.getItem("unitBySubj")||"{}")}catch(_){return {}}})();US[ui.subj]=ui.unit;ui.subj=t.dataset.s;ui.unit=US[ui.subj]||"all";try{localStorage.setItem("unitBySubj",JSON.stringify(US))}catch(_){}}
+  else if(t.dataset.u){ui.unit=t.dataset.u;try{const US=JSON.parse(localStorage.getItem("unitBySubj")||"{}");US[ui.subj]=ui.unit;localStorage.setItem("unitBySubj",JSON.stringify(US))}catch(_){}}
   else if(t.dataset.tog){ui.closed[t.dataset.tog]=!ui.closed[t.dataset.tog]}
   else if(t.dataset.open){ui.open[t.dataset.open]=!ui.open[t.dataset.open]}
   else if(t.id==="hide"){ui.hide=!ui.hide}
