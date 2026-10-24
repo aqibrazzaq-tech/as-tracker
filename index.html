@@ -409,7 +409,7 @@ body[data-subj="b"] .cols,body[data-subj="b"] .row{grid-template-columns:92px 44
       </div>
       <div class="filters">
         <div id="units" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-        <button class="chip" id="hide" aria-pressed="false">Hide finished</button>
+        <button class="chip" id="synb">Sync code</button><button class="chip" id="hide" aria-pressed="false">Hide finished</button>
         <input id="q" type="search" placeholder="Search spec points" aria-label="Search spec points">
       </div>
     </div>
@@ -421,6 +421,7 @@ body[data-subj="b"] .cols,body[data-subj="b"] .row{grid-template-columns:92px 44
 <div class="wrap" id="colswrap"><div class="cols" id="cols" aria-hidden="true"><span>Spec</span><span>Topic</span><span>Subtopic</span><span>SME + your notes</span><span>Question types</span><span>PMT</span><span>Rocket</span></div></div>
 <main class="wrap" id="main"></main>
 <div id="paper" hidden role="dialog" aria-modal="true" aria-label="Mini exam"></div>
+<div id="syn" hidden role="dialog" aria-modal="true" aria-label="Sync code"></div>
 <div id="fcd" hidden role="dialog" aria-modal="true" aria-label="Flashcards"></div>
 <div id="lvpop" hidden role="dialog" aria-label="How confident are you?"></div>
 <input type="file" id="file" accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,.txt,.md,text/plain,text/markdown" multiple hidden>
@@ -815,6 +816,26 @@ document.addEventListener("click",e=>{const o=e.target.closest("[data-fc]");if(o
 document.addEventListener("keydown",e=>{if(!FS||document.getElementById("fcd").hidden)return;
   if(e.key==="Escape"){fcClose();return}if(!FS.q||FS.pos>=FS.q.length||!document.getElementById("fcard"))return;
   if(e.key===" "){e.preventDefault();FS.show=!FS.show;fcCard()}else if(e.key==="ArrowRight")fcDecide(true);else if(e.key==="ArrowLeft")fcDecide(false)},true);
+
+(function(){const st=document.createElement("style");st.textContent="#syn{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.4);display:flex;align-items:flex-start;justify-content:center;padding:60px 16px}\n#syn[hidden]{display:none}\n#syn .sb{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:14px;padding:18px;max-width:460px;width:100%;display:flex;flex-direction:column;gap:10px}\n#syn .sh{display:flex;justify-content:space-between;align-items:center}#syn .sh b{font:600 17px var(--display)}\n#syn p,#syn small,#syn .sm{color:var(--muted);font-size:13px;margin:0}\n#syn button{font:500 14px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;padding:9px 14px;cursor:pointer}\n#syn button.pri{background:var(--fg);color:var(--bg)}\n#syn textarea{font:12px var(--mono);border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--fg);resize:vertical}\n";document.head.appendChild(st)})();
+async function synEncode(){const j=JSON.stringify({s:state,l:lv,w:weak,c:sc,p:pc,f:fcs});
+  try{const cs=new Blob([j]).stream().pipeThrough(new CompressionStream("gzip"));const b=new Uint8Array(await new Response(cs).arrayBuffer());let t="";for(let i=0;i<b.length;i+=8192)t+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return "AST1:"+btoa(t)}
+  catch(e){return "AST0:"+btoa(unescape(encodeURIComponent(j)))}}
+async function synDecode(c){c=c.trim().replace(/\s+/g,"");const m=c.match(/^AST([01]):(.+)$/);if(!m)throw new Error("That doesn't look like a tracker code");
+  const raw=atob(m[2]);if(m[1]==="0")return JSON.parse(decodeURIComponent(escape(raw)));
+  const b=Uint8Array.from(raw,ch=>ch.charCodeAt(0));const ds=new Blob([b]).stream().pipeThrough(new DecompressionStream("gzip"));return JSON.parse(await new Response(ds).text())}
+function synOpen(){const el=document.getElementById("syn");el.hidden=false;
+  el.innerHTML=`<div class="sb"><div class="sh"><b>Sync code</b><button data-sy="x">Close</button></div>
+  <p>Move your progress between this tracker and your other copy (or send it to Claude). It carries ticks, confidence, scores and flashcards.</p>
+  <button class="pri" data-sy="copy">Copy my code</button><span class="sm" id="symsg"></span>
+  <textarea id="syt" placeholder="Paste a code here" rows="4"></textarea>
+  <button data-sy="in">Load this code</button><small>Loading a code replaces the progress on this copy.</small></div>`}
+document.addEventListener("click",async e=>{if(e.target.closest("#synb")){synOpen();return}
+  const b=e.target.closest("[data-sy]");if(!b)return;const a=b.dataset.sy,msg=t=>{const m=document.getElementById("symsg");if(m)m.textContent=t};
+  if(a==="x"){document.getElementById("syn").hidden=true;return}
+  if(a==="copy"){const c=await synEncode();document.getElementById("syt").value=c;try{await navigator.clipboard.writeText(c);msg("Copied. Paste it anywhere.")}catch(_){document.getElementById("syt").select();msg("Selected, tap Copy.")}}
+  if(a==="in"){try{const d=await synDecode(document.getElementById("syt").value);state=d.s||{};lv=d.l||{};weak=d.w||{};sc=d.c||{};pc=d.p||{};fcs=d.f||{};
+      saveLocal();queue();fcSave();render();msg("Loaded ✓");setTimeout(()=>{document.getElementById("syn").hidden=true},700)}catch(err){msg(err.message||"Couldn't read that code")}}});
 
 const BQ={};for(const q of BANK){const k=q.s+"|"+q.t;(BQ[k]=BQ[k]||[]).push(q)}
 const TYP={};const TIDS=[];
