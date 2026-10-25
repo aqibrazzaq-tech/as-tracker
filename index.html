@@ -311,10 +311,13 @@ a.mbtn{text-decoration:none;display:inline-block}
 .dsplit{font-size:11px;color:var(--faint)}
 
 body[data-subj="b"] .cols,body[data-subj="b"] .row{grid-template-columns:92px 44px 128px minmax(170px,1fr) 150px 108px 122px 104px 104px 128px 210px}
+body[data-subj="e"] .cols,body[data-subj="e"] .row{grid-template-columns:92px 52px 150px minmax(170px,1fr) 140px 112px 112px 128px 100px 128px 210px}
+@media (max-width:1420px){body[data-subj="e"] .cols,body[data-subj="e"] .row{grid-template-columns:92px 52px minmax(150px,1fr) 140px 108px 108px 124px 96px 120px 190px}}
+@media (max-width:1240px){body[data-subj="e"] .row{grid-template-columns:44px minmax(0,1fr)}}
 @media (max-width:1420px){body[data-subj="b"] .cols,body[data-subj="b"] .row{grid-template-columns:92px 44px minmax(150px,1fr) 146px 104px 118px 100px 100px 120px 190px}}
 @media (max-width:1240px){body[data-subj="b"] .row{grid-template-columns:44px minmax(0,1fr)}}
 /* subject dashboard */
-.dash{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:16px 0 4px}
+.dash{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;padding:16px 0 4px}
 .dcard{display:flex;align-items:center;gap:14px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;cursor:pointer;text-align:left;min-width:0}
 .dcard[aria-pressed="true"]{border-color:var(--dc);box-shadow:0 0 0 1px var(--dc) inset}
 .dcard svg{flex:none;display:block}
@@ -472,7 +475,8 @@ let ui={subj:"c",unit:"all",hide:false,q:"",open:{},closed:{}};
 try{const s=JSON.parse(localStorage.getItem(KEY)||"{}");state=s.state||{};lv=s.lv||{};weak=s.weak||{};pc=s.pc||{};Object.assign(ui,s.ui||{});ui.q="";}catch(e){}
 
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const cellsFor=r=>COLS.filter(([k])=>(k==="q"&&r.q.length)||(k==="t"&&r.l.p.length)||(k==="k"&&(r.l.r.length||RKD.RK[r.k]))||(k==="n"&&r.sme)||(k==="f"&&r.fc)).map(([k])=>k);
+const ECOLS=[["s","Learn structure"],["m","Model answer"],["a","Timed attempt"],["x","Marked"],["w","Rewrite"]];
+const cellsFor=r=>r.k[0]==="e"?ECOLS.map(([k])=>k):COLS.filter(([k])=>(k==="q"&&r.q.length)||(k==="t"&&r.l.p.length)||(k==="k"&&(r.l.r.length||RKD.RK[r.k]))||(k==="n"&&r.sme)||(k==="f"&&r.fc)).map(([k])=>k);
 function tally(rows){let d=0,t=0;for(const r of rows)for(const k of cellsFor(r)){t++;if(state[r.k+"."+k])d++}return [d,t]}
 const pct=([d,t])=>t?Math.round(d/t*100):0;
 
@@ -483,7 +487,7 @@ function render(){
   document.getElementById("eyebrow").textContent=SEYE[ui.subj];
   dashHTML();
   for(const s of SUBJS){const b=document.getElementById("tab-"+s);b.setAttribute("aria-selected",ui.subj===s);document.getElementById("n-"+s).textContent=pct(tally(DATA[s]))+"%"}
-  document.getElementById("cols").innerHTML="<span>Confidence</span>"+"<span>Spec</span><span class=\"ctopic\">Topic</span><span>Subtopic</span><span>SME + your notes</span>"+(ui.subj==="b"?"<span>Flashcards</span>":"")+"<span>"+(ui.subj==="e"?"How to answer":"Question types")+"</span><span>"+(ui.subj==="e"?"Examiner report":"PMT")+"</span><span>Rocket</span>"+"<span>Weakest</span><span>My weak spots</span>";
+  document.getElementById("cols").innerHTML=(ui.subj==="e"?"<span>Confidence</span><span>Q</span><span class=\"ctopic\">Section</span><span>Question</span><span>1 · Learn structure</span><span>2 · Model answer</span><span>3 · Timed attempt</span><span>4 · Mark it</span><span>5 · Rewrite</span><span>Weakest</span><span>My weak spots</span>":"<span>Confidence</span>"+"<span>Spec</span><span class=\"ctopic\">Topic</span><span>Subtopic</span><span>SME + your notes</span>"+(ui.subj==="b"?"<span>Flashcards</span>":"")+"<span>Question types</span><span>PMT</span><span>Rocket</span>"+"<span>Weakest</span><span>My weak spots</span>");
   weakBar();
   const rows=DATA[ui.subj];
   const units=[...new Set(rows.map(r=>r.u))];
@@ -514,7 +518,7 @@ function cellVal(r,c){if(c==="f"&&fcList(r))return fcKnown(r)*4;if(c==="q")retur
 function started(r,c){if(c==="f"&&fcList(r))return fcSeen(r)>0;return c==="q"?qAuto(r)!==null:!!state[r.k+"."+c]}
 function rowConf(r){const cs=cellsFor(r);if(!cs.length)return 0;return Math.round(cs.reduce((a,c)=>a+cellVal(r,c)/4,0)/cs.length*100)}
 function avgConf(rows){if(!rows.length)return 0;return Math.round(rows.reduce((a,r)=>a+rowConf(r),0)/rows.length)}
-const SHORT={n:"SME notes",f:"Flashcards",q:"Q types",t:"PMT",k:"Rocket"};
+const SHORT={n:"SME notes",f:"Flashcards",q:"Q types",t:"PMT",k:"Rocket",s:"Structure",m:"Model answer",a:"Timed attempt",x:"Marked",w:"Rewrite"};
 function confHTML(r){const p=rowConf(r);return `<div class="conf${p?"":" zero"}" title="Average confidence across this row"><span class="cv">${p}%</span><span class="cb"><i style="width:${p}%"></i></span></div>`}
 function lvHTML(r,c){const k=r.k+"."+c;if(c==="q"&&confOn())return autoBadge(r);if(!confOn()||!state[k])return "";
   if(isPc(c)){const f=pcOf(k);return f==null?`<button class="lv unset" data-lv="${k}" aria-label="Add your score">add score</button>`:`<button class="lv pcb" data-lv="${k}" title="${pc[k][0]}/${pc[k][1]} marks. Tap to change"><span class="pb"><i style="width:${Math.round(f*100)}%"></i></span>${Math.round(f*100)}%</button>`}const v=lv[k]||0;
@@ -534,8 +538,23 @@ function weakBar(){const box=document.getElementById("weakwrap");if(!confOn()){b
   box.innerHTML=`<div class="weakbar"><span class="wt">Your weakest spec points</span>${low.length?low.map(([r,p])=>`<button data-jump="${r.k}" title="${esc(r.s)}">${esc(r.sp)}<span>${p}%</span></button>`).join(""):`<span class="none">Tick a box and rate your confidence to see them here.</span>`}</div>`}
 function refreshAllRows(){document.querySelectorAll("[data-r]").forEach(el=>refreshRow(el.dataset.r))}
 function isDone(r){return cellsFor(r).every(k=>state[r.k+"."+k])}
-function ck(r,k){return `<input type="checkbox" class="ck" id="${r.k}-${k}" data-k="${r.k}.${k}" ${state[r.k+"."+k]?"checked":""} aria-label="${COLS.find(c=>c[0]===k)[1]} done for ${esc(r.sp)}">`}
-function rowHTML(r){
+function ck(r,k){return `<input type="checkbox" class="ck" id="${r.k}-${k}" data-k="${r.k}.${k}" ${state[r.k+"."+k]?"checked":""} aria-label="${[...COLS,...ECOLS].find(c=>c[0]===k)[1]} done for ${esc(r.sp)}">`}
+function eRowHTML(r){const open=!!ui.open[r.k];const cf=confOn();
+  const c=(k,lab,extra)=>`<div class="cell"><span class="lbl">${lab}</span>${ck(r,k)+lvHTML(r,k)}${extra||""}</div>`;
+  return `<div class="row${isDone(r)?" complete":""}" data-r="${r.k}">
+    ${cf?confHTML(r):""}
+    <div class="spec">${esc(r.sp)}</div>
+    <div class="topc"><span>${esc(r.sec)}</span></div>
+    <div class="name"><span class="txt">${esc(r.s)}</span></div>
+    ${c("s","Structure",`<button class="qbtn" data-open="${r.k}" aria-expanded="${open}">Process ${open?"▴":"▾"}</button>`)}
+    ${c("m","Model")}
+    ${c("a","Timed")}
+    ${c("x","Marked",lks(r.l.p.map(([k,u])=>["Report",u])))}
+    ${c("w","Rewrite")}
+    ${cf?weakestHTML(r)+myNotesHTML(r):""}
+    ${open?`<div class="qpanel">${r.q.map(qtHTML).join("")}</div>`:""}
+  </div>`}
+function rowHTML(r){if(r.k[0]==="e")return eRowHTML(r);
   const has=cellsFor(r);const cp=/^(CORE PRACTICAL|CP\d)/i.test(r.s);
   const name=cp&&ui.subj!=="p"?r.s.replace(/^CORE PRACTICAL (\d+) - /i,""):r.s;
   const tag=cp?`<span class="cp">CP${(r.s.match(/(?:CORE PRACTICAL |CP)(\d+)/i)||[])[1]||""}</span>`:"";
@@ -548,8 +567,8 @@ function rowHTML(r){
     <div class="name">${examN(r)?`<button class="exb" data-exam="${r.k}" title="Mini exam paper for this spec point">Exam · ${examN(r)} Qs</button>`:""}<span class="txt">${esc(ui.subj==="p"?name.replace(/^CP\d+:\s*/,""):name)}${tag}</span></div>
     <div class="cell sme"><span class="lbl">SME</span>${has.includes("n")?ck(r,"n")+lvHTML(r,"n")+smeLinks(r):`<span class="none">No SME</span>`}${attHTML(r)}</div>
     ${ui.subj==="b"?`<div class="cell"><span class="lbl">Flashcards</span>${has.includes("f")?ck(r,"f")+(fcList(r)?fcBadge(r)+`<button class="lk fcb" data-fc="${r.k}" title="Swipe through this spec point's flashcards">Drill · ${fcList(r).length}</button>`:lvHTML(r,"f"))+`<a class="lk" href="${esc(r.fc)}" target="_blank" rel="noopener" title="Save My Exams flashcards">SME</a>`:`<span class="none">None</span>`}</div>`:""}
-    <div class="cell"><span class="lbl">${ui.subj==="e"?"How to":"Q types"}</span>${has.includes("q")?ck(r,"q")+lvHTML(r,"q")+`<button class="qbtn" data-open="${r.k}" aria-expanded="${open}">${r.q.length} type${r.q.length>1?"s":""} ${open?"▴":"▾"}</button>`:`<span class="none">Not mapped yet</span>`}</div>
-    <div class="cell"><span class="lbl">${ui.subj==="e"?"Report":"PMT"}</span>${has.includes("t")?ck(r,"t")+lvHTML(r,"t")+lks(r.l.p):`<span class="none">None</span>`}</div>
+    <div class="cell"><span class="lbl">Q types</span>${has.includes("q")?ck(r,"q")+lvHTML(r,"q")+`<button class="qbtn" data-open="${r.k}" aria-expanded="${open}">${r.q.length} type${r.q.length>1?"s":""} ${open?"▴":"▾"}</button>`:`<span class="none">Not mapped yet</span>`}</div>
+    <div class="cell"><span class="lbl">PMT</span>${has.includes("t")?ck(r,"t")+lvHTML(r,"t")+lks(r.l.p):`<span class="none">None</span>`}</div>
     <div class="cell"><span class="lbl">Rocket</span>${has.includes("k")?ck(r,"k")+lvHTML(r,"k")+(RKD.RK[r.k]?rkHTML(r):lks(r.l.r)):`<span class="none">None</span>`}</div>
     ${cf?weakestHTML(r)+myNotesHTML(r):""}
     ${open?`<div class="qpanel">${r.q.map(qtHTML).join("")}</div>`:""}
