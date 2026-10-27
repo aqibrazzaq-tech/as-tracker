@@ -1140,9 +1140,9 @@ let ET={plan:{},bud:{},t:{},act:null,def:210};try{ET=Object.assign(ET,JSON.parse
 let etRef=null,etTick=null,etEditing=false;
 const dkey=dt=>{const z=new Date(dt.getTime()-dt.getTimezoneOffset()*60000);return z.toISOString().slice(0,10)};
 let etDay=dkey(new Date());
-function etSave(){try{localStorage.setItem("et:v1",JSON.stringify(ET))}catch(e){}if(etRef){clearTimeout(etSave.h);etSave.h=setTimeout(()=>etRef.set({et:ET,updated:Date.now()}).catch(()=>{}),900)}}
+function etSave(){ET.lu=Date.now();try{localStorage.setItem("et:v1",JSON.stringify(ET))}catch(e){}if(etRef){clearTimeout(etSave.h);etSave.pend=true;etSave.h=setTimeout(()=>{etRef.set({et:ET,updated:Date.now()}).catch(()=>{}).finally(()=>{etSave.pend=false})},700)}}
 (async()=>{try{if(!window.claude?.use)return;const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);if(!db||!user)return;const id=await user.id();if(!id)return;etRef=db.doc("data/users/"+id+"/english_timer");
-  etRef.onSnapshot(snap=>{if(snap.metadata&&snap.metadata.hasPendingWrites)return;if(!snap.exists)return;const r=(snap.data()||{}).et;if(!r)return;if(JSON.stringify(r)!==JSON.stringify(ET)&&!ET.act){ET=Object.assign({plan:{},bud:{},t:{},act:null,def:210},r);try{localStorage.setItem("et:v1",JSON.stringify(ET))}catch(e){}if(ui.subj==="e")render()}},()=>{})}catch(e){}})();
+  etRef.onSnapshot(snap=>{if(snap.metadata&&snap.metadata.hasPendingWrites)return;if(!snap.exists)return;const r=(snap.data()||{}).et;if(!r||etSave.pend)return;if((r.lu||0)<=(ET.lu||0))return;if(JSON.stringify(r)!==JSON.stringify(ET)&&!ET.act){ET=Object.assign({plan:{},bud:{},t:{},act:null,def:210},r);try{localStorage.setItem("et:v1",JSON.stringify(ET))}catch(e){}if(ui.subj==="e")render()}},()=>{})}catch(e){}})();
 const etPaper=day=>ET.plan[day]||EPLAN0[day]||"L1";
 const etBud=day=>+(ET.bud[day]??ET.def);
 function etTargets(day){const ks=EPROWS[etPaper(day)];const B=etBud(day);const tot=ks.reduce((a,k)=>a+EC[k].mk,0);const o={};for(const k of ks)o[k]=Math.max(5,Math.round(B*EC[k].mk/tot/5)*5);return o}
@@ -1185,9 +1185,9 @@ document.addEventListener("change",e=>{const t=e.target;if(t.hasAttribute&&t.has
 /* ---------- Calendar: drag spec points, topics and English questions onto days ---------- */
 const CALK="cal:v1";let CAL={b:{},cap:{},week:null,min:false,open:false,lib:"auto",libq:"",showDone:false,view:"week",day:null};try{CAL=Object.assign(CAL,JSON.parse(localStorage.getItem(CALK)||"{}"))}catch(e){}
 let calRef=null;
-function calSave(){try{localStorage.setItem(CALK,JSON.stringify(CAL))}catch(e){}if(calRef){clearTimeout(calSave.t);calSave.t=setTimeout(()=>calRef.set({cal:{b:CAL.b,cap:CAL.cap,rt:CAL.rt||null,dt:CAL.dt||{}},updated:Date.now()}).catch(()=>{}),900)}}
+function calSave(){CAL.lu=Date.now();try{localStorage.setItem(CALK,JSON.stringify(CAL))}catch(e){}if(calRef){clearTimeout(calSave.t);calSave.pend=true;calSave.t=setTimeout(()=>{calRef.set({cal:{b:CAL.b,cap:CAL.cap,rt:CAL.rt||null,dt:CAL.dt||{},u:CAL.lu},updated:Date.now()}).catch(()=>{}).finally(()=>{calSave.pend=false})},700)}}
 (async()=>{try{if(!window.claude?.use)return;const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);if(!db||!user)return;const id=await user.id();if(!id)return;calRef=db.doc("data/users/"+id+"/calendar");
-  calRef.onSnapshot(snap=>{if(snap.metadata&&snap.metadata.hasPendingWrites)return;if(!snap.exists){if(Object.keys(CAL.b).length)calSave();return}const r=(snap.data()||{}).cal;if(!r)return;if(JSON.stringify({b:r.b,cap:r.cap})!==JSON.stringify({b:CAL.b,cap:CAL.cap})){CAL.b=r.b||{};CAL.cap=r.cap||{};if(r.rt)CAL.rt=r.rt;if(r.dt)CAL.dt=r.dt;try{localStorage.setItem(CALK,JSON.stringify(CAL))}catch(e){}calPaint()}},()=>{})}catch(e){}})();
+  calRef.onSnapshot(snap=>{if(snap.metadata&&snap.metadata.hasPendingWrites)return;if(!snap.exists){if(Object.keys(CAL.b).length)calSave();return}const r=(snap.data()||{}).cal;if(!r||calSave.pend||cDrag||mDrag)return;if((r.u||0)<=(CAL.lu||0))return;if(JSON.stringify({b:r.b,cap:r.cap})!==JSON.stringify({b:CAL.b,cap:CAL.cap})){CAL.lu=r.u||0;CAL.b=r.b||{};CAL.cap=r.cap||{};if(r.rt)CAL.rt=r.rt;if(r.dt)CAL.dt=r.dt;try{localStorage.setItem(CALK,JSON.stringify(CAL))}catch(e){}calPaint()}},()=>{})}catch(e){}})();
 const CEXAM={"2026-11-03":"Lang P1 exam","2026-11-04":"Lit P1 exam","2026-11-05":"Lang P2 exam","2027-01-08":"Bio U1 + Maths P1 exams","2027-01-11":"Chem U1 + Phys U1 exams"};
 const CEND="2027-01-11";
 const CW={0:"m",1:"p",2:"b",3:"c",4:"b",5:"p",6:"c"};
