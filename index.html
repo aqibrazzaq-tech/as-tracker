@@ -1257,10 +1257,10 @@ function cTodayLeft(){const k=ctoday();const bl=CAL.b[k]||[];const left=bl.filte
 
 function cSchedule0(k){const R=crt();const tpl=R[cDayType(k)]||R.school;let win=[];for(const [n,a,b,kind] of tpl)if(kind==="study")win.push([tm2(a),tm2(b)]);let f=win.reduce((a,[x,y])=>a+(y-x),0);for(const [,ps,pe] of cPrayers(k))for(const [a,b] of win)f-=Math.max(0,Math.min(b,pe)-Math.max(a,ps));return f}
 /* ---------- day timeline: routine + prayers + study blocks with real times ---------- */
-const CRT0={school:[["Morning study","05:20","06:00","study"],["Get ready + breakfast","06:00","06:42","fixed"],["School","06:42","14:30","fixed"],["Home, lunch, rest","14:30","15:30","fixed"],["Study","15:30","19:00","study"],["Gym / run","19:00","20:00","fixed"],["Dinner + wind-down, no screens","20:00","21:15","fixed"]],
- weekend:[["Fajr + rest","05:00","07:00","fixed"],["Study","07:00","11:00","study"],["Break","11:00","11:30","fixed"],["Study","11:30","13:00","study"],["Lunch + rest","13:00","14:30","fixed"],["Study","14:30","17:00","study"],["Free time","17:00","19:00","fixed"],["Gym / run","19:00","20:00","fixed"],["Dinner + wind-down, no screens","20:00","21:15","fixed"]],
+const CRT0={school:[["Morning study","05:20","06:00","study"],["Get ready + breakfast","06:00","06:42","fixed"],["School","06:42","14:30","fixed"],["Home, lunch, rest","14:30","15:30","fixed"],["Study","15:30","19:00","study"],["Dinner + wind-down, no screens","20:00","21:15","fixed"]],
+ weekend:[["Fajr + rest","05:00","07:00","fixed"],["Study","07:00","11:00","study"],["Break","11:00","11:30","fixed"],["Study","11:30","13:00","study"],["Lunch + rest","13:00","14:30","fixed"],["Study","14:30","17:00","study"],["Free time","17:00","19:00","fixed"],["Dinner + wind-down, no screens","20:00","21:15","fixed"]],
  pray:[["Fajr","04:15"],["Dhuhr","11:25"],["Asr","14:45"],["Maghrib","17:05"],["Isha","18:35"]],prayMin:15};
-const crt=()=>CAL.rt||(CAL.rt=JSON.parse(JSON.stringify(CRT0)));
+const crt=()=>{if(!CAL.rt)CAL.rt=JSON.parse(JSON.stringify(CRT0));if(!CAL.noGym){for(const t of ["school","weekend"])if(CAL.rt[t])CAL.rt[t]=CAL.rt[t].filter(r=>!/gym|run$/i.test(r[0]));CAL.noGym=1}return CAL.rt};
 const tm2=x=>{const [h,m]=x.split(":").map(Number);return h*60+m};const m2t=m=>String(Math.floor(m/60)).padStart(2,"0")+":"+String(Math.round(m%60)).padStart(2,"0");
 function cDayType(k){return (CAL.dt||{})[k]||([5,6].includes(cdate(k).getDay())?"weekend":"school")}
 function cPrayers(k){const R=crt();const L=R.pray.map(([n,t])=>[n,tm2(t),tm2(t)+R.prayMin]);if(cdate(k).getDay()===5){const i=L.findIndex(x=>x[0]==="Dhuhr");if(i>=0)L[i]=["Jumu'ah",L[i][1],L[i][1]+60]}return L}
@@ -1273,7 +1273,7 @@ function cSchedule(k){const R=crt();const tpl=R[cDayType(k)]||R.school;const pr=
   bl.forEach((b,i)=>{if(b.at!=null)return;let need=+b.mins||0;while(need>0&&wi<win.length){if(cur<win[wi][0])cur=win[wi][0];const room=win[wi][1]-cur;if(room<=0){wi++;continue}const m=Math.min(room,need);pieces.push({i,s:cur,e:cur+m,cont:need<(+b.mins||0)});cur+=m;need-=m;if(cur>=win[wi][1])wi++}
     if(need>0)over+=need});
   const free=win.reduce((a,[x,y])=>a+(y-x),0);return {tpl,pr,win,pieces,over,free}}
-function cDayViewHTML(k){const S=cSchedule(k);const T0=240,T1=1350,PX=1.15;const y=m=>(Math.max(T0,Math.min(T1,m))-T0)*PX;const H=(T1-T0)*PX;const d=cdate(k);const now=new Date();const nowM=now.getHours()*60+now.getMinutes();
+function cDayViewHTML(k){const S=cSchedule(k);const T0=240,T1=1439,PX=1.15;const y=m=>(Math.max(T0,Math.min(T1,m))-T0)*PX;const H=(T1-T0)*PX;const d=cdate(k);const now=new Date();const nowM=now.getHours()*60+now.getMinutes();
   const hours=[];for(let h=Math.ceil(T0/60);h*60<=T1;h++)hours.push(h);
   const used=(CAL.b[k]||[]).reduce((a,b)=>a+(+b.mins||0),0);
   return `<div class="cdv"><div class="cdvh"><button class="mbtn" data-cx="dprev" aria-label="Previous day">‹<\/button><b>${d.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"})}<\/b><button class="mbtn" data-cx="dnext" aria-label="Next day">›<\/button>
@@ -1292,7 +1292,7 @@ function cRoutineHTML(){const R=crt();const row=(t,i,r)=>`<div class="crr"><inpu
    ${["school","weekend"].map(t=>`<h5>${t==="school"?"School day (Sun to Thu)":"Weekend / holiday (Fri, Sat)"}<\/h5>${R[t].map((r,i)=>row(t,i,r)).join("")}<button class="lk" data-rtadd="${t}">+ Add row<\/button>`).join("")}
    <h5>Prayer times (approximate for Doha, edit to match your timetable)<\/h5><div class="crr">${R.pray.map(([n,t],i)=>`<label>${n} <input type="time" data-pr="${i}" value="${t}"><\/label>`).join("")}<label>minutes each <input type="number" data-prm value="${R.prayMin}" style="width:60px"><\/label><\/div><\/div>`}
 
-function cWeekTimeHTML(days){const T0=240,T1=1290,PX=0.82;const y=m=>(Math.max(T0,Math.min(T1,m))-T0)*PX;const H=(T1-T0)*PX;const now=new Date();const nowM=now.getHours()*60+now.getMinutes();
+function cWeekTimeHTML(days){const T0=240,T1=1439,PX=0.82;const y=m=>(Math.max(T0,Math.min(T1,m))-T0)*PX;const H=(T1-T0)*PX;const now=new Date();const nowM=now.getHours()*60+now.getMinutes();
   const hours=[];for(let h=Math.ceil(T0/60);h*60<=T1;h++)hours.push(h);
   const head=days.map(k=>{const d=cdate(k);const bl=CAL.b[k]||[];const used=bl.reduce((a,b)=>a+(+b.mins||0),0);const cap=cCap(k);const sx=cEngDay(k)?"e":cSubjOf(k);const S=cSchedule(k);
     return `<div class="cwh${k===ctoday()?" today":""}" data-cx="goday" data-k="${k}" title="Open this day"><span class="cdn">${d.toLocaleDateString(undefined,{weekday:"short"})} <b>${d.getDate()}<\/b><\/span>${CEXAM[k]?`<span class="cex">${CEXAM[k]}<\/span>`:`<span class="cds" style="--cc:${cSubjCol(sx)}">${cEngDay(k)?"English + "+SNAME[cSubjOf(k)]:SNAME[sx]}<\/span>`}<span class="cwcap${S.over?" over":""}"><i style="width:${cap?Math.min(100,used/cap*100):0}%"><\/i><em>${fmtM(used)} / ${fmtM(cap)}${S.over?" ⚠":""}<\/em><\/span><\/div>`}).join("");
