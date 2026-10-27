@@ -1255,8 +1255,10 @@ function cPrayers(k){const R=crt();const L=R.pray.map(([n,t])=>[n,tm2(t),tm2(t)+
 function cSchedule(k){const R=crt();const tpl=R[cDayType(k)]||R.school;const pr=cPrayers(k);
   let win=[];for(const [n,a,b,kind] of tpl)if(kind==="study")win.push([tm2(a),tm2(b)]);
   for(const [,ps,pe] of pr){const nw=[];for(const [a,b] of win){if(pe<=a||ps>=b){nw.push([a,b]);continue}if(ps>a)nw.push([a,ps]);if(pe<b)nw.push([pe,b])}win=nw}
-  win.sort((x,y)=>x[0]-y[0]);const bl=CAL.b[k]||[];const pieces=[];let wi=0,cur=win[0]?win[0][0]:0;let over=0;
-  bl.forEach((b,i)=>{let need=+b.mins||0;while(need>0&&wi<win.length){if(cur<win[wi][0])cur=win[wi][0];const room=win[wi][1]-cur;if(room<=0){wi++;continue}const m=Math.min(room,need);pieces.push({i,s:cur,e:cur+m,cont:need<(+b.mins||0)});cur+=m;need-=m;if(cur>=win[wi][1])wi++}
+  const bl=CAL.b[k]||[];const pieces=[];
+  bl.forEach((b,i)=>{if(b.at==null)return;const a=+b.at,e2=a+(+b.mins||0);pieces.push({i,s:a,e:e2,fixed:1});const nw=[];for(const [x,y2] of win){if(e2<=x||a>=y2){nw.push([x,y2]);continue}if(a>x)nw.push([x,a]);if(e2<y2)nw.push([e2,y2])}win=nw});
+  win.sort((x,y)=>x[0]-y[0]);let wi=0,cur=win[0]?win[0][0]:0;let over=0;
+  bl.forEach((b,i)=>{if(b.at!=null)return;let need=+b.mins||0;while(need>0&&wi<win.length){if(cur<win[wi][0])cur=win[wi][0];const room=win[wi][1]-cur;if(room<=0){wi++;continue}const m=Math.min(room,need);pieces.push({i,s:cur,e:cur+m,cont:need<(+b.mins||0)});cur+=m;need-=m;if(cur>=win[wi][1])wi++}
     if(need>0)over+=need});
   const free=win.reduce((a,[x,y])=>a+(y-x),0);return {tpl,pr,win,pieces,over,free}}
 function cDayViewHTML(k){const S=cSchedule(k);const T0=240,T1=1350,PX=1.15;const y=m=>(Math.max(T0,Math.min(T1,m))-T0)*PX;const H=(T1-T0)*PX;const d=cdate(k);const now=new Date();const nowM=now.getHours()*60+now.getMinutes();
@@ -1265,12 +1267,12 @@ function cDayViewHTML(k){const S=cSchedule(k);const T0=240,T1=1350,PX=1.15;const
   return `<div class="cdv"><div class="cdvh"><button class="mbtn" data-cx="dprev" aria-label="Previous day">‹<\/button><b>${d.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"})}<\/b><button class="mbtn" data-cx="dnext" aria-label="Next day">›<\/button>
    <select data-cdt aria-label="Type of day"><option value="school"${cDayType(k)==="school"?" selected":""}>School day<\/option><option value="weekend"${cDayType(k)==="weekend"?" selected":""}>Weekend / holiday<\/option><\/select>
    ${CEXAM[k]?`<span class="cex">${CEXAM[k]}<\/span>`:""}<span class="emeta">Study planned ${fmtM(used)} · free study time ${fmtM(S.free)}<\/span>${S.over?`<span class="cover">⚠ ${fmtM(S.over)} doesn't fit today<\/span>`:""}<button class="lk" data-cx="routine">⚙ Edit routine<\/button><\/div>
-   <div class="cdvb"><div class="ctl" data-cday="${k}" style="height:${H}px">
+   <div class="cdvb"><div class="ctl" data-cday="${k}" data-t0="${T0}" data-px="${PX}" style="height:${H}px">
     ${hours.map(h=>`<div class="chr" style="top:${y(h*60)}px"><span>${String(h).padStart(2,"0")}:00<\/span><\/div>`).join("")}
     ${S.tpl.map(([n,a,b,kind])=>kind==="study"?`<div class="cwin" style="top:${y(tm2(a))}px;height:${y(tm2(b))-y(tm2(a))}px"><\/div>`:`<div class="cfix" style="top:${y(tm2(a))}px;height:${Math.max(16,y(tm2(b))-y(tm2(a)))}px"><b>${esc(n)}<\/b><span>${a} to ${b}<\/span><\/div>`).join("")}
     ${S.pr.map(([n,a,b])=>`<div class="cpr2" style="top:${y(a)}px;height:${Math.max(14,y(b)-y(a))}px"><b>🕌 ${esc(n)}<\/b><span>${m2t(a)}<\/span><\/div>`).join("")}
     ${S.pieces.map(pc=>{const b=CAL.b[k][pc.i];const dn=cBlockDone(b);const sj=cRef(b)?b.ref[0]:b.subj||"x";const h=y(pc.e)-y(pc.s);
-      return `<div class="ctb${dn?" done":""}" data-cblk="${k}|${pc.i}" style="top:${y(pc.s)}px;height:${Math.max(18,h-2)}px;--cc:${cSubjCol(sj)}"><span class="cgrip">⠿<\/span><div class="cbt"><b>${esc(cLabel(b))}${pc.cont?" (cont.)":""}<\/b>${h>30?`<span>${m2t(pc.s)} to ${m2t(pc.e)} · ${esc(cSub(b))}<\/span>`:""}<\/div><\/div>`}).join("")}
+      return `<div class="ctb${dn?" done":""}" data-cblk="${k}|${pc.i}" style="top:${y(pc.s)}px;height:${Math.max(18,h-2)}px;--cc:${cSubjCol(sj)}"><span class="cgrip">⠿<\/span><div class="cbt"><b>${pc.fixed?"📌 ":""}${esc(cLabel(b))}${pc.cont?" (cont.)":""}<\/b>${h>30?`<span>${m2t(pc.s)} to ${m2t(pc.e)} · ${esc(cSub(b))}<\/span>`:""}<\/div><\/div>`}).join("")}
     ${k===ctoday()&&nowM>T0&&nowM<T1?`<div class="cnow" style="top:${y(nowM)}px"><\/div>`:""}
    <\/div><\/div><\/div>`}
 function cRoutineHTML(){const R=crt();const row=(t,i,r)=>`<div class="crr"><input data-rt="${t}|${i}|0" value="${esc(r[0])}"><input type="time" data-rt="${t}|${i}|1" value="${r[1]}"><input type="time" data-rt="${t}|${i}|2" value="${r[2]}"><select data-rt="${t}|${i}|3">${["study","fixed"].map(o=>`<option${o===r[3]?" selected":""}>${o}<\/option>`).join("")}<\/select><button class="lk" data-rtdel="${t}|${i}">✕<\/button><\/div>`;
@@ -1283,12 +1285,12 @@ function cWeekTimeHTML(days){const T0=240,T1=1290,PX=0.82;const y=m=>(Math.max(T
   const head=days.map(k=>{const d=cdate(k);const bl=CAL.b[k]||[];const used=bl.reduce((a,b)=>a+(+b.mins||0),0);const cap=cCap(k);const sx=cEngDay(k)?"e":cSubjOf(k);const S=cSchedule(k);
     return `<div class="cwh${k===ctoday()?" today":""}" data-cx="goday" data-k="${k}" title="Open this day"><span class="cdn">${d.toLocaleDateString(undefined,{weekday:"short"})} <b>${d.getDate()}<\/b><\/span>${CEXAM[k]?`<span class="cex">${CEXAM[k]}<\/span>`:`<span class="cds" style="--cc:${cSubjCol(sx)}">${cEngDay(k)?"English + "+SNAME[cSubjOf(k)]:SNAME[sx]}<\/span>`}<span class="cwcap${S.over?" over":""}"><i style="width:${cap?Math.min(100,used/cap*100):0}%"><\/i><em>${fmtM(used)} / ${fmtM(cap)}${S.over?" ⚠":""}<\/em><\/span><\/div>`}).join("");
   const cols=days.map(k=>{const S=cSchedule(k);const past=k<ctoday();
-    return `<div class="ctl cwc${past?" past":""}${k===ctoday()?" today":""}" data-cday="${k}" style="height:${H}px">
+    return `<div class="ctl cwc${past?" past":""}${k===ctoday()?" today":""}" data-cday="${k}" data-t0="${T0}" data-px="${PX}" style="height:${H}px">
      ${hours.map(h=>`<div class="chr2" style="top:${y(h*60)}px"><\/div>`).join("")}
      ${S.tpl.map(([n,a,b,kind])=>kind==="study"?`<div class="cwin" style="top:${y(tm2(a))}px;height:${y(tm2(b))-y(tm2(a))}px"><\/div>`:`<div class="cfix sm" style="top:${y(tm2(a))}px;height:${Math.max(10,y(tm2(b))-y(tm2(a)))}px" title="${esc(n)} ${a} to ${b}">${y(tm2(b))-y(tm2(a))>14?`<b>${esc(n)}<\/b>`:""}<\/div>`).join("")}
      ${S.pr.map(([n,a,b])=>`<div class="cpr3" style="top:${y(a)}px" title="${esc(n)} ${m2t(a)}">🕌 ${esc(n)}<\/div>`).join("")}
      ${S.pieces.map(pc=>{const b=CAL.b[k][pc.i];const dn=cBlockDone(b);const sj=cRef(b)?b.ref[0]:b.subj||"x";const h=y(pc.e)-y(pc.s);
-       return `<div class="ctb sm${dn?" done":""}" data-cblk="${k}|${pc.i}" style="top:${y(pc.s)}px;height:${Math.max(14,h-1)}px;--cc:${cSubjCol(sj)}" title="${esc(cLabel(b))} ${m2t(pc.s)} to ${m2t(pc.e)}"><span class="cgrip">⠿<\/span><div class="cbt"><b>${esc(cLabel(b))}${pc.cont?" ›":""}<\/b>${h>26?`<span>${m2t(pc.s)} to ${m2t(pc.e)}<\/span>`:""}<\/div><\/div>`}).join("")}
+       return `<div class="ctb sm${dn?" done":""}" data-cblk="${k}|${pc.i}" style="top:${y(pc.s)}px;height:${Math.max(14,h-1)}px;--cc:${cSubjCol(sj)}" title="${esc(cLabel(b))} ${m2t(pc.s)} to ${m2t(pc.e)}"><span class="cgrip">⠿<\/span><div class="cbt"><b>${pc.fixed?"📌 ":""}${esc(cLabel(b))}${pc.cont?" ›":""}<\/b>${h>26?`<span>${m2t(pc.s)} to ${m2t(pc.e)}<\/span>`:""}<\/div><\/div>`}).join("")}
      ${k===ctoday()&&nowM>T0&&nowM<T1?`<div class="cnow" style="top:${y(nowM)}px"><\/div>`:""}<\/div>`}).join("");
   return `<div class="cwk"><div class="cwhr"><div class="cgut"><\/div>${head}<\/div><div class="cwbody"><div class="cgut" style="height:${H}px">${hours.map(h=>`<span style="top:${y(h*60)}px">${String(h).padStart(2,"0")}:00<\/span>`).join("")}<\/div>${cols}<\/div><\/div>`}
 function calPaint(){let el=document.getElementById("calp");if(!el){el=document.createElement("div");el.id="calp";document.body.appendChild(el);calWire(el)}
@@ -1335,24 +1337,28 @@ function cPlan(){const t=ctoday();for(const d of Object.keys(CAL.b))if(d>=t){CAL
 function cPop(key,anchor){const [d,i]=key.split("|");const b=(CAL.b[d]||[])[+i];if(!b)return;let p=document.getElementById("cpop");if(!p){p=document.createElement("div");p.id="cpop";document.body.appendChild(p)}
   const r=cRef(b)?crow(b.ref):null;const lg=r?(b.kind==="part"?cPartLogged(b.ref,b.part):cLogged(b.ref)):0;
   p.innerHTML=`<b>${esc(cLabel(b))}<\/b><span class="emeta">${esc(cSub(b))}<\/span>${r?`<span class="emeta">Logged ${fmtM(lg)} of ${fmtM(b.kind==="part"?cPartEst(r,b.part):cEst(r))} estimate<\/span>`:""}
+   ${b.at!=null?`<div class="cpr"><span>📌 Starts at <b>${m2t(b.at)}<\/b><\/span><button class="mbtn" data-cp="t-15">−15m<\/button><button class="mbtn" data-cp="t15">+15m<\/button><button class="lk" data-cp="unfix">Let it float<\/button><\/div>`:`<span class="emeta">Floats into the next free study slot. Drag it to a time to pin it.<\/span>`}
    <div class="cpr"><button class="mbtn" data-cp="m15">−15m<\/button><span>${fmtM(b.mins)} planned<\/span><button class="mbtn" data-cp="p15">+15m<\/button><\/div>
    <div class="cpr">${r?`<button class="mbtn pri" data-cp="timer">⏱ Start timer<\/button><button class="mbtn" data-cp="open">Open in tracker<\/button>`:""}<button class="mbtn" data-cp="done">${b.done?"Not done":"✓ Done"}<\/button><button class="mbtn" data-cp="del">✕ Remove<\/button><\/div>`;
   p.dataset.key=key;p.hidden=false;const rc=anchor.getBoundingClientRect();const w=Math.min(300,innerWidth-16);let x=Math.max(8,Math.min(innerWidth-w-8,rc.left));let y=rc.bottom+6;if(y+170>innerHeight)y=Math.max(8,rc.top-176);p.style.left=x+"px";p.style.top=y+"px";p.style.width=w+"px"}
 function cPopHide(){const p=document.getElementById("cpop");if(p)p.hidden=true}
 
+function cTimeAt(tl,clientY){const r=tl.getBoundingClientRect();const m=+tl.dataset.t0+(clientY-r.top)/(+tl.dataset.px);return Math.max(0,Math.min(1435,Math.round(m/5)*5))}
 function cSelect(src){cSel=cSel===src?null:src;document.querySelectorAll("#calp [data-csrc]").forEach(x=>x.classList.toggle("sel",x.dataset.csrc===cSel));if(cSel)toast("Now tap a day to add it.")}
 /* drag and drop with pointer events (works with finger, pencil and mouse) */
 let cDrag=null,cSel=null;
 function calWire(el){
   el.addEventListener("pointerdown",e=>{const g=e.target.closest(".cgrip");if(!g)return;const it=g.closest("[data-csrc],[data-cblk]");if(!it)return;e.preventDefault();
-    cDrag={src:it.dataset.csrc||null,blk:it.dataset.cblk||null,x:e.clientX,y:e.clientY,on:false,id:e.pointerId,label:it.querySelector("b")?.textContent||""};try{g.setPointerCapture(e.pointerId)}catch(_){}});
+    cDrag={src:it.dataset.csrc||null,blk:it.dataset.cblk||null,x:e.clientX,y:e.clientY,on:false,id:e.pointerId,label:(it.dataset.cblk?(it.querySelector(".cbt b")||{}).textContent:(it.querySelector(".clt")||{}).textContent||"").trim().slice(0,60)};try{g.setPointerCapture(e.pointerId)}catch(_){}});
   el.addEventListener("pointermove",e=>{if(!cDrag)return;if(!cDrag.on&&Math.hypot(e.clientX-cDrag.x,e.clientY-cDrag.y)>6){cDrag.on=true;const gh=document.createElement("div");gh.id="cghost";gh.textContent=cDrag.label;document.body.appendChild(gh)}
     if(cDrag.on){const gh=document.getElementById("cghost");gh.style.left=e.clientX+12+"px";gh.style.top=e.clientY+12+"px";gh.hidden=true;const t=document.elementFromPoint(e.clientX,e.clientY);gh.hidden=false;
-      document.querySelectorAll(".cday.hov,.clib.hov").forEach(x=>x.classList.remove("hov"));const dd=t&&t.closest("[data-cday]");if(dd)dd.classList.add("hov");else if(cDrag.blk&&t&&t.closest(".clib"))t.closest(".clib").classList.add("hov");
+      document.querySelectorAll(".cday.hov,.clib.hov").forEach(x=>x.classList.remove("hov"));const dd=t&&t.closest("[data-cday]");if(dd)dd.classList.add("hov");else if(cDrag.blk&&t&&t.closest(".clib"))t.closest(".clib").classList.add("hov");const tl=t&&t.closest(".ctl");gh.textContent=cDrag.label+(tl?" · "+m2t(cTimeAt(tl,e.clientY)):"");
       const gr=el.querySelector(".cgrid");if(gr){const r=gr.getBoundingClientRect();if(e.clientX>r.right-40)gr.scrollLeft+=12;else if(e.clientX<r.left+40&&e.clientX>r.left)gr.scrollLeft-=12}}});
   const end=e=>{if(!cDrag)return;const d=cDrag;cDrag=null;const gh=document.getElementById("cghost");if(gh)gh.remove();document.querySelectorAll(".cday.hov,.clib.hov").forEach(x=>x.classList.remove("hov"));
     if(!d.on){if(d.src){cSelect(d.src)}else if(d.blk){const n=document.querySelector(`[data-cblk="${d.blk}"]`);if(n)cPop(d.blk,n)}return}
     const t=document.elementFromPoint(e.clientX,e.clientY);const day=t&&t.closest("[data-cday]");
+    const tl=t&&t.closest(".ctl");
+    if(day&&tl){const dk=day.dataset.cday;const at=cTimeAt(tl,e.clientY);if(d.src){const nb=cMakeBlocks(d.src);if(nb.length){nb[0].at=at;let c=at+(+nb[0].mins||0);for(let j=1;j<nb.length;j++){nb[j].at=c;c+=+nb[j].mins||0}cAdd(dk,nb)}}else{const [fd,fi]=d.blk.split("|");const b=(CAL.b[fd]||[]).splice(+fi,1)[0];if(!b)return;b.pin=1;b.at=at;if(CAL.b[fd]&&!CAL.b[fd].length)delete CAL.b[fd];(CAL.b[dk]=CAL.b[dk]||[]).push(b);calSave();calPaint()}toast("Placed at "+m2t(at));return}
     const onb=t&&t.closest(".ctl [data-cblk]");
     if(day&&onb){const [dk,di]=onb.dataset.cblk.split("|");const at=+di;let nb;if(d.src)nb=cMakeBlocks(d.src);else{const [fd,fi]=d.blk.split("|");if(fd===dk&&+fi===at)return;nb=(CAL.b[fd]||[]).splice(+fi,1);nb.forEach(b=>b.pin=1);if(CAL.b[fd]&&!CAL.b[fd].length&&fd!==dk)delete CAL.b[fd];if(fd===dk&&+fi<at){CAL.b[dk].splice(at-1,0,...nb);calSave();calPaint();return}}(CAL.b[dk]=CAL.b[dk]||[]).splice(at,0,...nb);calSave();calPaint();return}
     if(day){if(d.src)cAdd(day.dataset.cday,cMakeBlocks(d.src));else if(d.blk)cMove(d.blk,day.dataset.cday)}else if(d.blk&&t&&t.closest(".clib"))cRemove(d.blk)};
@@ -1366,7 +1372,7 @@ function calWire(el){
     const c=e.target.closest("[data-ccust]");if(c){const x=cLibSubj();const T={pp:[SNAME[x]+" past paper","Timed paper + marking",135],rev:[SNAME[x]+" review","Redo wrong questions",45],brk:["Break","Rest, walk, salah",20]}[c.dataset.ccust];cSel="custom:"+JSON.stringify({kind:"custom",subj:c.dataset.ccust==="brk"?"x":x,label:T[0],sub:T[1],mins:T[2]});toast("Now tap a day to add it.");return}
     const cp=e.target.closest("[data-ccap]");if(cp){const k=cp.dataset.ccap;const cur=cCap(k);const w=document.createElement("span");w.className="ccapin";w.innerHTML=`<input type="number" min="0" step="15" value="${cur}"> min <button class="mbtn pri">Set<\/button>`;cp.replaceWith(w);const inp=w.querySelector("input");inp.focus();inp.select();
       const set=()=>{const v=Math.max(0,Math.round(+inp.value||0));CAL.cap[k]=v;calSave();calPaint()};w.querySelector("button").onclick=set;inp.onkeydown=ev=>{if(ev.key==="Enter")set()};return}
-    const day=e.target.closest("[data-cday]");if(day&&cSel&&!e.target.closest("[data-cblk]")){if(cSel.startsWith("custom:")){const o=JSON.parse(cSel.slice(7));cAdd(day.dataset.cday,[{...o,id:cid(),pin:1}])}else cAdd(day.dataset.cday,cMakeBlocks(cSel));cSel=null;return}
+    const day=e.target.closest("[data-cday]");if(day&&cSel&&!e.target.closest("[data-cblk]")){const tl=e.target.closest(".ctl");const at=tl?cTimeAt(tl,e.clientY):null;let nb;if(cSel.startsWith("custom:")){const o=JSON.parse(cSel.slice(7));nb=[{...o,id:cid(),pin:1}]}else nb=cMakeBlocks(cSel);if(at!=null&&nb.length)nb[0].at=at;cAdd(day.dataset.cday,nb);cSel=null;if(at!=null)toast("Placed at "+m2t(at));return}
     const li=e.target.closest("[data-csrc]");if(li&&!e.target.closest(".cgrip")){const src=li.dataset.csrc;const kd=src.slice(0,src.indexOf(":")),rf=src.slice(src.indexOf(":")+1);
       if(kd==="row"){(CAL.libOpen=CAL.libOpen||{})[rf]=!CAL.libOpen[rf];calSave();const l=el.querySelector(".clist");const st=l?l.scrollTop:0;calPaint();const l2=el.querySelector(".clist");if(l2)l2.scrollTop=st;return}
       if(kd==="topic"){const key=cLibSubj()+"|"+rf;(CAL.libClosed=CAL.libClosed||{})[key]=!CAL.libClosed[key];calSave();const l=el.querySelector(".clist");const st=l?l.scrollTop:0;calPaint();const l2=el.querySelector(".clist");if(l2)l2.scrollTop=st;return}
@@ -1382,7 +1388,7 @@ function calWire(el){
   el.addEventListener("click",e=>{const a=e.target.closest("[data-rtadd]");if(a){crt()[a.dataset.rtadd].push(["New","12:00","13:00","study"]);calSave();calPaint();return}
     const dl=e.target.closest("[data-rtdel]");if(dl){const [ty,i]=dl.dataset.rtdel.split("|");crt()[ty].splice(+i,1);calSave();calPaint()}})}
 document.addEventListener("click",e=>{const p=e.target.closest("#cpop [data-cp]");if(p){const pop=document.getElementById("cpop");const [d,i]=pop.dataset.key.split("|");const b=(CAL.b[d]||[])[+i];if(!b)return;const a=p.dataset.cp;
-    if(a==="m15")b.mins=Math.max(5,b.mins-15);else if(a==="p15")b.mins+=15;else if(a==="done")b.done=!b.done;else if(a==="del"){cRemove(pop.dataset.key);cPopHide();return}
+    if(a==="t-15")b.at=Math.max(0,b.at-15);else if(a==="t15")b.at=Math.min(1430,b.at+15);else if(a==="unfix")delete b.at;else if(a==="m15")b.mins=Math.max(5,b.mins-15);else if(a==="p15")b.mins+=15;else if(a==="done")b.done=!b.done;else if(a==="del"){cRemove(pop.dataset.key);cPopHide();return}
     else if(a==="timer"){cPopHide();CAL.min=true;calSave();calPaint();tmOpen(b.ref);if(b.kind==="part"&&TM._a&&TM._a.k===b.ref&&!TM._a.since){TM._a.p=b.part;tmSave();tmPaint()}return}
     else if(a==="open"){cPopHide();CAL.min=true;calSave();calPaint();ui.subj=b.ref[0];render();setTimeout(()=>{const el=document.querySelector(`[data-r="${b.ref}"]`);if(el){el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1500)}},80);return}
     b.pin=1;calSave();calPaint();const n=document.querySelector(`[data-cblk="${pop.dataset.key}"]`);if(n)cPop(pop.dataset.key,n);else cPopHide();return}
