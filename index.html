@@ -1164,9 +1164,9 @@ function eAnthStat(k,N){const key="A:"+eSrcNorm(N.t);const own=(EA[k]||{})["Text
 function eAnthPanel(P,k,title,sub){const L=(EDR.odds[P]||[]).map(o=>eOddsN(P,o));const mx=Math.max(...L.map(N=>+N.odds||0),1);
   return `<div class="eanp"><div class="edh"><b>${title}<\/b><span class="emeta">${sub}<\/span><\/div><div class="eanc2">${L.map(N=>{const st=eAnthStat(k,N);
    return `<button class="eanx${N.stub?" eanlo":""}" data-ew="${k}" data-es="Text: ${esc(N.t)}"><b>${esc(N.t)}<\/b><span class="emeta">${esc(N.stub?"past papers: "+N.past.length:N.a)}<\/span><span class="eodds"><i style="width:${Math.round((+N.odds||0)/mx*100)}%"><\/i><\/span><span class="emeta">${N.odds}% · ${st}<\/span><\/button>`}).join("")}<\/div><\/div>`}
-function eAnthHTML(){return eAnthPanel("L1","e4","Lang P1 Anthology · all texts by odds for Nov 2026","Q4 + Q5 text. Paste once, it fills every paper and question that uses it.")
-  +eAnthPanel("L2","e7","Lang P2 Anthology · all texts by odds","Section A essay text. Paste once, it fills every paper that used it.")
-  +eAnthPanel("T1","e10","Lit P1 Anthology poems · all by odds","Section B comparison. Paste each poem once, past papers pull in both poems they used.")}
+function eAnthHTML(){const sh=u=>!ui.unit||ui.unit==="all"||ui.unit===u;return (sh("Lang P1")?eAnthPanel("L1","e4","Lang P1 Anthology · all texts by odds for Nov 2026","Q4 + Q5 text. Paste once, it fills every paper and question that uses it."):"")
+  +(sh("Lang P2")?eAnthPanel("L2","e7","Lang P2 Anthology · all texts by odds","Section A essay text. Paste once, it fills every paper that used it."):"")
+  +(sh("Lit P1")?eAnthPanel("T1","e10","Lit P1 Anthology poems · all by odds","Section B comparison. Paste each poem once, past papers pull in both poems they used."):"")}
 {const _p=eDayPaint;eDayPaint=function(){_p();const box=document.getElementById("edaywrap");if(box&&ui.subj==="e")box.insertAdjacentHTML("beforeend",eAnthHTML())}}
 async function eAuto(btn){const A=edAtt();if(!A.src||A.src.length<80){toast("Paste the extract first.");return}
   if(!sampleNS){toast("Claude annotation works in the Claude version of the tracker.");return}
