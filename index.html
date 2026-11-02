@@ -949,6 +949,14 @@ const tmToday=()=>{const z=new Date();const y=new Date(z.getTime()-z.getTimezone
 function tmDayAdd(k,p,secs){const D=TM._d||(TM._d={});const dd=D[tmToday()]||(D[tmToday()]={});dd[k+"|"+p]=Math.max(0,(dd[k+"|"+p]||0)+secs)}
 function tmDaySecs(day,k,p){let s=((TM._d||{})[day]||{})[k+"|"+p]||0;const a=TM._a;if(a&&a.since&&a.k===k&&a.p===p&&day===tmToday())s+=(Date.now()-a.since)/1000;return s}
 function tmDayRow(day,k){return tmParts(k).reduce((s,[p])=>s+tmDaySecs(day,k,p),0)}
+/* study gate: publishes today's study minutes so a phone automation can lock apps until 3h30 is done */
+const GATE_MIN=210;let gateRef=null,gateLast="";
+function gateMins(){const day=tmToday();let s=0;const D=((TM._d||{})[day])||{};for(const v of Object.values(D))s+=+v||0;const a=TM._a;if(a&&a.since)s+=(Date.now()-a.since)/1000;
+  try{if(typeof ET!=="undefined"&&ET.t&&ET.t[day])for(const v of Object.values(ET.t[day]))s+=Math.max(0,+v||0)}catch(e){}return Math.floor(s/60)}
+function gatePush(){if(!gateRef)return;const day=tmToday();const m=gateMins();const [y,mo,d]=day.split("-");const ok=m>=GATE_MIN?day+" "+(+y)+"-"+(+mo)+"-"+(+d):"";
+  const key=day+"|"+m+"|"+ok;if(key===gateLast)return;gateLast=key;gateRef.set({day,mins:m,need:GATE_MIN,ok,updated:Date.now()}).catch(()=>{})}
+(async()=>{try{if(!window.claude?.use)return;const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);const id=db&&user&&await user.id();if(!id)return;gateRef=db.doc("data/users/"+id+"/gate");gatePush();setInterval(gatePush,60000);document.addEventListener("visibilitychange",gatePush)}catch(e){}})();
+
 function tmStop(){const a=TM._a;if(!a||!a.since)return;const secs=(Date.now()-a.since)/1000;const x=TM[a.k]||(TM[a.k]={});x[a.p]=(x[a.p]||0)+secs;tmDayAdd(a.k,a.p,secs);a.since=0;tmSave();
   if(!tmStop.fromDoc&&typeof ed!=="undefined"&&ed.tick&&ed.k===a.k){edStop.noTm=true;edStop();edStop.noTm=false}tmSync()}
 function tmStartPart(k,p){const a=TM._a;if(a&&a.since){if(a.k===k&&a.p===p)return;tmStop()}tmOpenK=k;tmMini=true;TM._a={k,p:p||(a&&a.k===k&&a.p)||tmParts(k)[0][0],since:Date.now()};tmSave();tmPaint();tmSync()}
