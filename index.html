@@ -405,6 +405,28 @@ body[data-subj="e"] #h1,body[data-subj="e"] #eyebrow,body[data-subj="e"] #main .
 .wbc{display:block;width:100%;height:240px;touch-action:none;cursor:crosshair}
 .wb.er .wbc{cursor:cell}
 .wbl{position:absolute;left:10px;top:9px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#8a9099;pointer-events:none}
+body[data-subj="b"] .ck{width:12px;height:12px;border-width:1.2px;border-radius:3px}
+body[data-subj="b"] .ck::after{width:6px;height:3px;border-width:1.5px}
+#bprog{margin:10px 0 0}
+#bprog .bpw{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+#bprog .bph{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+#bprog .bph b{font-size:14px;margin-right:4px}
+#bprog select{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:8px;padding:5px 8px;max-width:260px}
+#bprog .bpc{font:inherit;font-size:12px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:4px 10px;cursor:pointer}
+#bprog .bpc[aria-pressed="true"]{border-color:var(--bio);color:var(--bio);background:color-mix(in srgb,var(--bio) 10%,transparent)}
+#bprog .bpg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+#bprog .bpk{border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+#bprog .bpk span{display:block;font-size:12px;color:var(--muted)}
+#bprog .bpk strong{font-size:20px;font-variant-numeric:tabular-nums}
+#bprog .bpk em{font-style:normal;font-size:12px;color:var(--muted);margin-left:6px}
+#bprog .bt{height:6px;border-radius:3px;background:var(--track);overflow:hidden;margin-top:6px}
+#bprog .bt i{display:block;height:100%;background:var(--bio)}
+#bprog .bpl{display:grid;gap:4px;margin-top:10px;max-height:260px;overflow:auto}
+#bprog .bpr{display:grid;grid-template-columns:minmax(0,1fr) 140px 56px;gap:10px;align-items:center;font-size:13px;padding:3px 0;border:0;background:none;color:inherit;text-align:left;cursor:pointer;font-family:inherit}
+#bprog .bpr:hover{color:var(--bio)}
+#bprog .bpr .tx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bprog .bpr .pc{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+@media (max-width:560px){#bprog .bpr{grid-template-columns:minmax(0,1fr) 80px 44px}}
 </style>
 
 <header>
@@ -2157,6 +2179,36 @@ function keepScroll(fn){return function(){const root=document.getElementById("ca
     for(const [c,key,t,l] of sv){const n=map[key]||(c&&el.querySelector("."+c.trim().split(/\s+/)[0]));if(n){n.scrollTop=t;n.scrollLeft=l}}}
   if(window.scrollY!==wy||window.scrollX!==wx)window.scrollTo(wx,wy);return r}}
 try{calPaint=keepScroll(calPaint)}catch(e){}try{render=keepScroll(render)}catch(e){}
+
+/* ---------- Biology progress filter: by subject, topic or spec point, and by part ---------- */
+const BPK="bprog:v1";const BPC=[["n","Notes"],["f","Flashcards"],["q","Question types"],["k","Rocket"]];
+let BP={scope:"all",topic:"",spec:"",comps:["n","f","q","k"]};try{Object.assign(BP,JSON.parse(localStorage.getItem(BPK)||"{}"))}catch(e){}
+function bpSave(){try{localStorage.setItem(BPK,JSON.stringify(BP))}catch(e){}}
+function bpTally(rows,comps){let d=0,t=0;for(const r of rows){const cs=cellsFor(r);for(const c of comps)if(cs.includes(c)){t++;if(state[r.k+"."+c])d++}}return [d,t]}
+function bpPaint(){let el=document.getElementById("bprog");const ww=document.getElementById("weakwrap");
+  if(ui.subj!=="b"){if(el)el.hidden=true;return}
+  if(!el){el=document.createElement("div");el.id="bprog";if(ww)ww.before(el);else return;
+    el.addEventListener("click",e=>{const c=e.target.closest("[data-bpc]");if(c){const k=c.dataset.bpc;BP.comps=BP.comps.includes(k)?BP.comps.filter(x=>x!==k):[...BP.comps,k];if(!BP.comps.length)BP.comps=[k];bpSave();bpPaint();return}
+      const r=e.target.closest("[data-bpgo]");if(r){const [sc,v]=r.dataset.bpgo.split("|");if(sc==="topic"){BP.scope="topic";BP.topic=v}else{BP.scope="spec";BP.spec=v}bpSave();bpPaint()}});
+    el.addEventListener("change",e=>{const t=e.target;if(t.id==="bps"){BP.scope=t.value;bpSave();bpPaint()}if(t.id==="bpt"){BP.topic=t.value;bpSave();bpPaint()}if(t.id==="bpsp"){BP.spec=t.value;bpSave();bpPaint()}})}
+  el.hidden=false;const rowsAll=DATA.b;const secs=[...new Set(rowsAll.map(r=>r.sec))];
+  if(!secs.includes(BP.topic))BP.topic=secs[0];if(!rowsAll.some(r=>r.k===BP.spec))BP.spec=rowsAll[0].k;
+  const rows=BP.scope==="all"?rowsAll:BP.scope==="topic"?rowsAll.filter(r=>r.sec===BP.topic):rowsAll.filter(r=>r.k===BP.spec);
+  const comps=BPC.filter(([k])=>BP.comps.includes(k));const tot=bpTally(rows,comps.map(c=>c[0]));
+  const card=(lab,[d,t])=>`<div class="bpk"><span>${esc(lab)}</span><strong>${t?Math.round(d/t*100):0}%</strong><em>${d}/${t}</em><div class="bt"><i style="width:${t?d/t*100:0}%"></i></div></div>`;
+  let list="";
+  if(BP.scope==="all")list=secs.map(sc=>{const tl=bpTally(rowsAll.filter(r=>r.sec===sc),comps.map(c=>c[0]));return `<button class="bpr" data-bpgo="topic|${esc(sc)}"><span class="tx">${esc(topicShort(sc))}</span><span class="bt" style="margin:0"><i style="width:${tl[1]?tl[0]/tl[1]*100:0}%"></i></span><span class="pc">${tl[1]?Math.round(tl[0]/tl[1]*100):0}%</span></button>`}).join("");
+  else if(BP.scope==="topic")list=rows.map(r=>{const tl=bpTally([r],comps.map(c=>c[0]));return `<button class="bpr" data-bpgo="spec|${r.k}"><span class="tx">${esc(r.sp)} . ${esc(r.s)}</span><span class="bt" style="margin:0"><i style="width:${tl[1]?tl[0]/tl[1]*100:0}%"></i></span><span class="pc">${tl[1]?Math.round(tl[0]/tl[1]*100):0}%</span></button>`}).join("");
+  el.innerHTML=`<div class="bpw"><div class="bph"><b>Biology progress</b>
+    <select id="bps" aria-label="Progress for"><option value="all"${BP.scope==="all"?" selected":""}>Whole subject</option><option value="topic"${BP.scope==="topic"?" selected":""}>One topic</option><option value="spec"${BP.scope==="spec"?" selected":""}>One spec point</option></select>
+    ${BP.scope==="topic"?`<select id="bpt" aria-label="Topic">${secs.map(sc=>`<option value="${esc(sc)}"${sc===BP.topic?" selected":""}>${esc(topicShort(sc))}</option>`).join("")}</select>`:""}
+    ${BP.scope==="spec"?`<select id="bpsp" aria-label="Spec point">${rowsAll.map(r=>`<option value="${r.k}"${r.k===BP.spec?" selected":""}>${esc(r.sp)} . ${esc(r.s.slice(0,60))}</option>`).join("")}</select>`:""}
+    <span style="flex:1"></span>${BPC.map(([k,l])=>`<button class="bpc" data-bpc="${k}" aria-pressed="${BP.comps.includes(k)}">${l}</button>`).join("")}</div>
+    <div class="bpg">${card(comps.length===4?"All parts":comps.map(c=>c[1]).join(" + "),tot)}${comps.map(([k,l])=>card(l,bpTally(rows,[k]))).join("")}</div>
+    ${list?`<div class="bpl">${list}</div>`:""}</div>`}
+(function(){const _r=render;render=function(){const x=_r.apply(this,arguments);try{bpPaint()}catch(e){}return x}})();
+document.addEventListener("change",e=>{if(e.target.classList&&e.target.classList.contains("ck"))setTimeout(()=>{try{bpPaint()}catch(_){}},0)});
+try{bpPaint()}catch(e){}
 </script>
 
 </html>
