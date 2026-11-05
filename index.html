@@ -2148,6 +2148,15 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-wbtool]");
   document.addEventListener("pointermove",e=>{if(!cur||e.target!==cur.c)return;const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];for(const ev of evs){const [a,b]=pt(cur.c,ev);cur.x.beginPath();cur.x.moveTo(cur.last[0],cur.last[1]);cur.x.lineTo(a,b);cur.x.stroke();cur.last=[a,b]}});
   const end=()=>{if(!cur)return;try{WB[cur.c.parentNode.dataset.wb]=cur.c.toDataURL()}catch(_){}cur=null};
   document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end)})();
+
+/* ---------- keep scroll position when the calendar or tracker repaints (drag and drop) ---------- */
+function keepScroll(fn){return function(){const root=document.getElementById("calp");const sv=[];
+  if(root&&!root.hidden){const seen={};root.querySelectorAll("*").forEach(n=>{const c=typeof n.className==="string"?n.className:"";const key=c+"#"+(seen[c]=(seen[c]||0)+1);if(n.scrollTop||n.scrollLeft)sv.push([c,key,n.scrollTop,n.scrollLeft])})}
+  const wx=window.scrollX,wy=window.scrollY;const r=fn.apply(this,arguments);
+  const el=document.getElementById("calp");if(el&&sv.length){const map={},seen={};el.querySelectorAll("*").forEach(n=>{const c=typeof n.className==="string"?n.className:"";map[c+"#"+(seen[c]=(seen[c]||0)+1)]=n});
+    for(const [c,key,t,l] of sv){const n=map[key]||(c&&el.querySelector("."+c.trim().split(/\s+/)[0]));if(n){n.scrollTop=t;n.scrollLeft=l}}}
+  if(window.scrollY!==wy||window.scrollX!==wx)window.scrollTo(wx,wy);return r}}
+try{calPaint=keepScroll(calPaint)}catch(e){}try{render=keepScroll(render)}catch(e){}
 </script>
 
 </html>
