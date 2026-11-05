@@ -395,6 +395,9 @@ body[data-subj="e"] .cols,body[data-subj="e"] .row{grid-template-columns:92px 52
 .dh .qpgs{max-width:240px}
 .verdict.rw{align-items:center;flex-wrap:wrap;gap:8px}.mbtn.rwok{background:var(--done-soft);border-color:var(--done);color:var(--done)}.mbtn.rwno{background:var(--track);border-color:var(--warn);color:var(--warn)}.rws{font-family:var(--mono);font-size:13px}
 ol.stpl{margin:8px 0 0;padding:10px 12px 10px 32px;border-left:3px solid var(--accent);background:var(--surface);border-radius:0 8px 8px 0;display:grid;gap:6px;font-size:14px;line-height:1.5}
+#tab-e,.dcard[data-s="e"] .dl,.dcard[data-s="e"]{text-decoration:line-through;text-decoration-thickness:2px}
+.dcard[data-s="e"]{opacity:.62}
+body[data-subj="e"] #h1,body[data-subj="e"] #eyebrow,body[data-subj="e"] #main .name .txt,body[data-subj="e"] #main h2,body[data-subj="e"] #main .spec,body[data-subj="e"] #main .topc{text-decoration:line-through;text-decoration-thickness:2px}
 </style>
 
 <header>
@@ -493,7 +496,9 @@ const cellsFor=r=>r.k[0]==="e"?ECOLS.map(([k])=>k):COLS.filter(([k])=>(k==="q"&&
 function tally(rows){let d=0,t=0;for(const r of rows)for(const k of cellsFor(r)){t++;if(state[r.k+"."+k])d++}return [d,t]}
 const pct=([d,t])=>t?Math.round(d/t*100):0;
 
+function engFinished(){let ch=0;for(const r of DATA.e)for(const k of cellsFor(r)){const id=r.k+"."+k;if(!state[id]){state[id]=1;ch=1}if(!lv[id]){lv[id]=4;ch=1}}if(ch){saveLocal();try{queue()}catch(e){}}}
 function render(){
+  engFinished();
   document.body.dataset.subj=ui.subj;
   const c=ui.subj==="c";
   document.getElementById("h1").textContent=SNAME[ui.subj]+" spec tracker";
