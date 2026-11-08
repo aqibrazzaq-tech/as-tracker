@@ -427,6 +427,26 @@ body[data-subj="b"] .ck::after{width:6px;height:3px;border-width:1.5px}
 #bprog .bpr .tx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #bprog .bpr .pc{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
 @media (max-width:560px){#bprog .bpr{grid-template-columns:minmax(0,1fr) 80px 44px}}
+.wkp{flex:1;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;text-align:left;font:inherit;font-size:12px;line-height:1.35;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 8px;cursor:pointer}
+.wkp:hover{border-color:var(--accent)}
+.wkp .wkn{grid-column:1;font-weight:600;font-size:11px;color:var(--accent)}
+.wkp .wkt{grid-column:1;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.wkp .wkx{grid-column:2;grid-row:1/span 2;align-self:center;color:var(--muted);font-size:14px}
+.wkp.empty .wkt{font-style:italic}
+#wkm{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+#wkm .wkb{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:14px;width:min(760px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden}
+#wkm .wkh{display:flex;gap:8px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+#wkm .wkh h3{margin:0;font-size:16px;flex:1;min-width:0}
+#wkm .wkh small{display:block;font-weight:400;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#wkm .wkh button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:8px;padding:5px 12px;cursor:pointer}
+#wkm .wkh button.on{border-color:var(--accent);color:var(--accent)}
+#wkm .wkc{overflow:auto;padding:14px 16px;display:grid;gap:10px}
+#wkm .wkq{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+#wkm .wkq b{display:block;font-size:14px;margin-bottom:4px}
+#wkm .wkq p{margin:0;font-size:14px;line-height:1.55;color:var(--fg)}
+#wkm .wkq.plain p{color:var(--muted)}
+#wkm textarea{width:100%;min-height:50vh;font:inherit;font-size:14px;line-height:1.5;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;resize:vertical}
+#wkm .wkhint{font-size:12px;color:var(--muted);margin:0}
 </style>
 
 <header>
@@ -578,7 +598,7 @@ function weakestHTML(r){const cs=cellsFor(r);if(!cs.length)return `<div class="w
   if(min===4)return `<div class="weakest"><span class="lbl">Weakest</span><span class="ok">All exam-ready</span></div>`;
   const lows=vals.filter(v=>v[1]===min).slice(0,2);
   return `<div class="weakest"><span class="lbl">Weakest</span>${lows.map(([c,v,t])=>`<span class="w${v<=1?" bad":""}">${SHORT[c]} <b>${cellLbl(r,c,v,t)}</b></span>`).join("")}${vals.filter(v=>v[1]===min).length>2?`<span class="w">+${vals.filter(v=>v[1]===min).length-2} more</span>`:""}</div>`}
-function myNotesHTML(r){return `<div class="mynotes"><span class="lbl">My weak spots</span><textarea id="wk-${r.k}" data-weak="${r.k}" rows="2" placeholder="What keeps going wrong here?" aria-label="Your weak spots for ${esc(r.sp)}">${esc(weak[r.k]||"")}</textarea>${attHTML(r,"w")}</div>`}
+function myNotesHTML(r){const t=weak[r.k]||"";const n=(t.match(/^Q:/gm)||[]).length;return `<div class="mynotes"><span class="lbl">My weak spots</span><button type="button" class="wkp${t?"":" empty"}" data-wkopen="${r.k}" aria-label="Open your weak spots for ${esc(r.sp)}">${t?`<span class="wkn">${n?n+" saved question"+(n>1?"s":""):"Notes"}</span><span class="wkt">${esc(t.replace(/^[QA]:\s*/gm,"").split("\n").filter(Boolean).slice(0,2).join(" · "))}</span>`:"<span class=\"wkt\">What keeps going wrong here? Tap to add</span>"}<span class="wkx" aria-hidden="true">⤢</span></button>${attHTML(r,"w")}</div>`}
 function weakBar(){const box=document.getElementById("weakwrap");if(!confOn()){box.innerHTML="";return}
   const rows=DATA[ui.subj].filter(r=>(ui.unit==="all"||r.u===ui.unit)&&cellsFor(r).some(c=>started(r,c)));
   const low=rows.map(r=>[r,rowConf(r)]).sort((a,b)=>a[1]-b[1]).slice(0,6);
@@ -2209,6 +2229,24 @@ function bpPaint(){let el=document.getElementById("bprog");const ww=document.get
 (function(){const _r=render;render=function(){const x=_r.apply(this,arguments);try{bpPaint()}catch(e){}return x}})();
 document.addEventListener("change",e=>{if(e.target.classList&&e.target.classList.contains("ck"))setTimeout(()=>{try{bpPaint()}catch(_){}},0)});
 try{bpPaint()}catch(e){}
+
+/* ---------- My weak spots: saved Q and A, opens big in a neat view ---------- */
+const WKSEED={"c34": [["How do I know if something is a giant ionic lattice?", "Metal + non-metal = ionic = giant ionic lattice (NaF, NaCl, MgO). Only non-metals = usually simple molecular. Only metal = giant metallic."], ["Is every ionic compound a giant lattice?", "Yes, as a solid. The + / \u2212 attraction works in every direction, so the ions stack into a huge 3D grid. Even NH4Cl and Na2CO3."], ["Full marks: structure and bonding of NaF?", "Giant ionic lattice. Ionic bonding = strong electrostatic attraction between oppositely charged ions (Na+ and F\u2212)."]], "c39": [["Polarising vs polarisable?", "Polarising = does the pulling = small cation with high + charge (Al3+ > Mg2+ > Na+). Polarisable = gets pulled = big anion with high \u2212 charge (I\u2212 > Br\u2212 > Cl\u2212 > F\u2212, S2\u2212 > Cl\u2212)."], ["Why is Ca2+ less polarisable than I\u2212 if Ca2+ has the higher charge?", "For polarisability, high charge means high NEGATIVE charge. Ca2+ is positive, so it grips its electrons tightly, and it's small. I\u2212 is negative and huge, so its electron cloud is floppy."], ["Which anion properties make it most easily polarised?", "Large radius AND large (negative) charge."]], "c44": [["Why does AlCl3 have more covalent character than NaCl?", "Al3+ is +3 and tiny = high charge density, so it pulls the Cl\u2212 electron cloud towards itself and the electrons are partly shared. Na+ is +1 and bigger = weak polariser, so it stays ionic. Order: NaCl < MgCl2 < AlCl3."], ["Why does less polarisation mean more ionic?", "Ionic = electrons stay fully on the anion (round cloud). Polarising drags electrons into the space between the nuclei = sharing = covalent. Less pulling = cloud stays round = more ionic."], ["BeCl2 (gas) vs CaCl2 (solid): why different bonding? (3 marks)", "Be2+ is very small with high charge density (1). It polarises Cl\u2212 strongly, so the bonding is covalent, small molecules (1). Ca2+ is larger with lower charge density, so little polarisation and the bonding stays ionic (1). Always say 'charge density'."]], "c90": [["What are London forces?", "Electrons move, so one molecule gets a temporary dipole. That induces a dipole in the next molecule and they attract. Weak, temporary, between ALL molecules. More electrons = stronger. (Named after Fritz London, not the city.)"], ["Why does silicon melt much higher than phosphorus if both are covalent?", "Si makes 4 bonds each and the network never closes = giant covalent, so melting breaks strong covalent bonds. P makes 3 bonds each and closes into P4 molecules = simple molecular, so melting only overcomes weak London forces between P4 molecules. Giant covalent = diamond, graphite, Si, SiO2."], ["How does phosphorus have London forces?", "They're between P4 molecules, not inside them. P4 is symmetrical with no permanent dipole, so London forces are the only forces. S8 (more electrons) melts higher than P4."]], "b7": [["What is low partial pressure of oxygen (pO2)?", "Not much O2 around, like in respiring tissues, so haemoglobin unloads O2. High pO2 (lungs) = haemoglobin loads O2."], ["Why does blood leaving a respiring tissue have less O2 and more CO2?", "Cells use O2, so low pO2 in cells and O2 diffuses out of the capillary. Respiration makes CO2, so high pCO2 in cells and CO2 diffuses into the blood."], ["Why is the artery endothelium smooth? Why folded?", "Smooth = less friction, blood flows easily. Folded = the lumen can expand when blood surges at high pressure without the lining tearing."], ["Where are the elastic fibres, and what does the inner layer do?", "Elastic fibres are mostly in the middle layer with the smooth muscle (stretch and recoil). Inner layer = endothelium: smooth (low friction) and folded (can stretch)."], ["Mark scheme for drawing an artery in section?", "{3 layers / 3 layers and endothelium} + lumen. { / } = either is fine. + = you need both."], ["Why is there no pulse in veins?", "Blood has passed through the capillary beds, so pressure is low and the pressure surges have been smoothed out."], ["What is a capillary bed?", "A network of capillaries between an arteriole and a venule where exchange happens. Huge surface area and every cell is close to one."], ["How does tissue fluid form?", "Arterial end: high hydrostatic pressure pushes plasma out through gaps (proteins and blood cells stay). Venous end: pressure is lower and the proteins pull water back in by osmosis. Leftover drains into lymph."]]};
+function weakSeed(){if(weak._wkseed1)return;let ch=0;for(const [k,qa] of Object.entries(WKSEED)){let t=weak[k]||"";for(const [q,a] of qa){if(!t.includes("Q: "+q)){t=(t.trim()?t.trim()+"\n\n":"")+"Q: "+q+"\nA: "+a;ch=1}}if(ch)weak[k]=t}weak._wkseed1="1";saveLocal();try{queue()}catch(e){}}
+let wkK=null,wkEdit=false;
+function wkFormat(t){const blocks=t.split(/\n\s*\n/).map(b=>b.trim()).filter(Boolean);if(!blocks.length)return `<p class="wkhint">Nothing here yet. Tap Edit to add a question you got stuck on and its simple answer. Start lines with "Q:" and "A:" to keep them neat.</p>`;
+  return blocks.map(b=>{const q=b.match(/^Q:\s*(.*)$/m),a=b.match(/^A:\s*([\s\S]*)$/m);if(q)return `<div class="wkq"><b>${esc(q[1])}</b>${a?`<p>${esc(a[1]).replace(/\n/g,"<br>")}</p>`:""}</div>`;return `<div class="wkq plain"><p>${esc(b).replace(/\n/g,"<br>")}</p></div>`}).join("")}
+function wkPaint(){let m=document.getElementById("wkm");if(!wkK){if(m)m.remove();return}const r=Object.values(DATA).flat().find(x=>x.k===wkK);if(!r)return;
+  if(!m){m=document.createElement("div");m.id="wkm";document.body.appendChild(m);
+    m.addEventListener("click",e=>{if(e.target===m){wkClose();return}const b=e.target.closest("[data-wka]");if(!b)return;const a=b.dataset.wka;if(a==="close")wkClose();if(a==="edit"){wkEdit=!wkEdit;wkPaint();if(wkEdit)m.querySelector("textarea")?.focus()}})}
+  const t=weak[wkK]||"";
+  m.innerHTML=`<div class="wkb" role="dialog" aria-modal="true" aria-label="My weak spots"><div class="wkh"><h3>My weak spots<small>${esc(r.sp)} . ${esc(r.s)}</small></h3><button data-wka="edit" class="${wkEdit?"on":""}">${wkEdit?"Done":"Edit"}</button><button data-wka="close">Close</button></div>
+   <div class="wkc">${wkEdit?`<textarea id="wk-${r.k}" data-weak="${r.k}" aria-label="Edit your weak spots">${esc(t)}</textarea><p class="wkhint">Tip: write "Q: your question" then "A: the simple answer", with a blank line between questions.</p>`:wkFormat(t)}</div></div>`}
+function wkClose(){const k=wkK;wkK=null;wkEdit=false;wkPaint();try{refreshRow(k)}catch(e){try{render()}catch(_){}}}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-wkopen]");if(!b)return;wkK=b.dataset.wkopen;wkEdit=!(weak[wkK]||"").trim();wkPaint()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&wkK)wkClose()});
+(function(){const _r=render;render=function(){try{weakSeed()}catch(e){}return _r.apply(this,arguments)}})();
+try{weakSeed();render()}catch(e){}
 </script>
 
 </html>
