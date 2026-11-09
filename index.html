@@ -460,7 +460,8 @@ body[data-subj="b"] .ck::after{width:6px;height:3px;border-width:1.5px}
 #wkm textarea{width:100%;min-height:50vh;font:inherit;font-size:14px;line-height:1.5;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;resize:vertical}
 #wkm .wkhint{font-size:12px;color:var(--muted);margin:0}
 /*HAND*/@media (min-width:1101px){.qt.has-deck{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}.qt.has-deck .deck{order:-1;padding-left:0;border-left:0;padding-right:22px;border-right:1px solid var(--line)}}
-body.penmode .qpanel,body.penmode .deck,body.penmode .qt{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}/*/HAND*/</style>
+body.penmode .qpanel,body.penmode .deck,body.penmode .qt{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}/*/HAND*//*HDR*/header{transition:transform .22s ease}body.compact header .top{display:none}body.compact header .bar{padding-top:6px;padding-bottom:6px}
+body.hdhide header{transform:translateY(-110%)}body.hdhide #colswrap{top:0}/*/HDR*/</style>
 
 <header>
   <div class="wrap">
@@ -2271,6 +2272,11 @@ document.addEventListener("pointerdown",e=>{if(e.pointerType==="pen"&&!pen){pen=
  if(pen&&e.pointerType==="touch"&&e.target.closest(".wbc")){e.stopImmediatePropagation();e.preventDefault()}},true);
 document.addEventListener("pointermove",e=>{if(pen&&e.pointerType==="touch"&&e.target.closest&&e.target.closest(".wbc"))e.stopImmediatePropagation()},true);
 document.addEventListener("selectstart",e=>{if(pen&&e.target.closest&&e.target.closest(".qpanel,.deck,.qt"))e.preventDefault()},true)})();/*/HANDJS*/
+/*HDRJS*/(function(){let last=scrollY,tick=false,lock=0;function upd(){tick=false;const y=scrollY,b=document.body;
+ const c=b.classList.contains("compact");if(!c&&y>220){b.classList.add("compact");b.classList.add("hdhide");try{setHH()}catch(_){}lock=Date.now()+350;last=scrollY;return}else if(c&&y<30){b.classList.remove("compact");try{setHH()}catch(_){}lock=Date.now()+350;last=scrollY;return}
+ if(Date.now()<lock){last=y;return}
+ if(y>last+8&&y>260)b.classList.add("hdhide");else if(y<last-8||y<120)b.classList.remove("hdhide");last=y}
+addEventListener("scroll",()=>{if(!tick){tick=true;requestAnimationFrame(upd)}},{passive:true})})();/*/HDRJS*/
 </script>
 
 </html>
