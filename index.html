@@ -2264,7 +2264,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&wkK)wkClose()});
 (function(){const _r=render;render=function(){try{weakSeed()}catch(e){}return _r.apply(this,arguments)}})();
 try{weakSeed();render()}catch(e){}
 
-/*MP1JS*/function mfmt(s){return esc(String(s)).replace(/\^\(([^()]*)\)/g,"<sup>$1</sup>").replace(/\^(−?-?\d+(?:\/\d+)?)/g,"<sup>$1</sup>").replace(/\n/g,"<br>")}
+/*MP1JS*/function mfmt(s){return esc(String(s)).replace(/\^\(([^()]*)\)/g,"<sup>$1</sup>").replace(/\^(−?-?\d+)/g,"<sup>$1</sup>").replace(/\n/g,"<br>")}
 function mxHTML(x){return `<div class="mx"><h4>Worked example</h4><div class="mxq">${mfmt(x.q)}</div>${x.v?`<div class="mvw">${x.v}</div>`:""}<ol class="mst">${x.w.map(s=>`<li>${mfmt(s)}</li>`).join("")}</ol><div class="mxa">Answer: <b>${mfmt(x.a)}</b></div></div>`}
 /*/MP1JS*/
 /*HANDJS*/(function(){let pen=false;try{pen=localStorage.getItem("wbpen")==="1"}catch(_){}if(pen)document.body.classList.add("penmode");
