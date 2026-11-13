@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
-<style>
+<script>/*THINIT*/(function(){var t="lt";try{t=localStorage.getItem("ui.theme")||"lt"}catch(e){}document.documentElement.classList.add(t)})();/*/THINIT*/</script><style>
 /* Layout: Notion-style database list. Sticky header with subject tabs and a completion ring top-right,
    then one block per topic, one row per spec point with tick cells (SME + your notes, Q types, Rocket). */
 :root{
@@ -453,7 +453,7 @@ body[data-subj="m"] .cols,body[data-subj="m"] .row{grid-template-columns:92px 44
 /*/MP1CSS*/
 /*BSCCSS*/.bsc{max-width:440px;margin:10px auto 4px}.bsc svg{width:100%;height:auto;display:block}.bsc .lb rect{fill:#fff6cf;stroke:#e8b33a}.bsc .lb text{fill:#222;font-weight:600}.bsc.bo .lb rect{fill:#111;stroke:#111}.bsc.bo .lb text{visibility:hidden}/*/BSCCSS*//*HAND*/@media (min-width:1101px){.qt.has-deck{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}.qt.has-deck .deck{order:-1;padding-left:0;border-left:0;padding-right:22px;border-right:1px solid var(--line)}}
 body.penmode .qpanel,body.penmode .deck,body.penmode .qt{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}/*/HAND*//*HDR*/header{transition:transform .22s ease}body.compact header .top{display:none}body.compact header .bar{padding-top:6px;padding-bottom:6px}
-body.hdhide header{transform:translateY(-110%)}body.hdhide #colswrap{top:0}/*/HDR*//*PVCSS*/.mvw svg.pv{width:100%;max-width:440px;height:auto;display:block;margin:6px 0}/*/PVCSS*/</style>
+body.hdhide header{transform:translateY(-110%)}body.hdhide #colswrap{top:0}/*/HDR*//*PVCSS*/.mvw svg.pv{width:100%;max-width:440px;height:auto;display:block;margin:6px 0}/*/PVCSS*//*THEME*/html:root.lt{--bg:#fbfaf8; --surface:#ffffff; --row-hover:#f4f2ee; --fg:#26241f; --muted:#6f6b63; --faint:#a19c92; --line:#e7e3dc; --chem:#b4581e; --chem-soft:#f8e9dd; --phys:#2f66c4; --phys-soft:#e3ecfa; --done:#2f8a57; --done-soft:#e1f2e8; --warn:#c2410c; --track:#ebe7e0; --bio:#0e8a6a; --bio-soft:#dcf2ea; --math:#6d4bd1; --math-soft:#ebe5fb; --eng:#b7791f; --eng-soft:#f8ecd6; color-scheme:light}html:root.lt body{background:var(--bg);color:var(--fg)}html:root.dk{--bg:#191919; --surface:#202020; --row-hover:#252525; --fg:#e9e6e0; --muted:#a19d95; --faint:#6e6a63; --line:#2f2e2c; --chem:#eb9a5c; --chem-soft:#3a2a1d; --phys:#7aa7f0; --phys-soft:#1d2b42; --done:#5fc58b; --done-soft:#1c3326; --warn:#ff8a5c; --track:#2e2d2b; --bio:#4fd1ac; --bio-soft:#16332b; --math:#ad97ff; --math-soft:#262040; --eng:#e5b45f; --eng-soft:#3a2d17; color-scheme:dark}html:root.dk body{background:var(--bg);color:var(--fg)}.thb{margin-left:auto}details.qtd{border:1px solid var(--line);border-radius:12px;margin:8px 0;background:var(--surface)}details.qtd>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:10px;padding:12px 14px;border-radius:12px}details.qtd>summary::-webkit-details-marker{display:none}details.qtd>summary:hover{background:var(--row-hover)}details.qtd>summary .cv{font-size:12px;color:var(--muted);transition:transform .15s;display:inline-block}details.qtd[open]>summary .cv{transform:rotate(90deg)}details.qtd>summary b{font-weight:600}details.qtd>summary .sa{color:var(--muted);font-size:13px;flex:1;min-width:0}details.qtd>summary .sn{font-family:var(--mono);font-size:12px;color:var(--muted);white-space:nowrap}details.qtd[open]>summary{border-bottom:1px solid var(--line);border-radius:12px 12px 0 0}details.qtd>.qt{margin:0;border:0}.qtall{display:flex;gap:6px;margin:6px 0}.qtall button{font:inherit;font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--fg);cursor:pointer}/*/THEME*/</style>
 
 <header>
   <div class="wrap">
@@ -487,7 +487,7 @@ body.hdhide header{transform:translateY(-110%)}body.hdhide #colswrap{top:0}/*/HD
       <button class="calbtn" id="calb" type="button">📅 Calendar <span></span></button>
       <div class="filters">
         <div id="units" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-        <button class="chip" id="synb">Sync code</button><button class="chip" id="hide" aria-pressed="false">Hide finished</button>
+        <button class="chip" id="synb">Sync code</button><button class="chip" id="thb" type="button"></button><button class="chip" id="hide" aria-pressed="false">Hide finished</button>
         <input id="q" type="search" placeholder="Search spec points" aria-label="Search spec points">
       </div>
     </div>
@@ -700,7 +700,7 @@ function smeLinks(r){if(SPN[r.k])return `<button class="lk" data-spn="${r.k}">No
 function lks(l){return l.map(([k,u])=>`<a class="lk" href="${esc(u)}" target="_blank" rel="noopener">${k}</a>`).join("")}
 function exLinks(c,qu,mu){const q=qu||ppUrl(c,"QP"),m=qu?mu:ppUrl(c,"MS");return (q?`<a class="lk" href="${esc(q)}" target="_blank" rel="noopener">QP</a>`:"")+(m?`<a class="lk" href="${esc(m)}" target="_blank" rel="noopener">MS</a>`:"")}
 function qtHTML([n,ask,steps,trap,ex]){const T=TYP[ui.subj+"|"+n];
-  const E=ui.subj==="m"?mfmt:esc;return `<div class="qt${T?" has-deck":""}"><div class="qi"><b>${esc(n)}</b><span class="ask">${E(ask)}</span><h4>How to answer</h4><ol>${steps.map(x=>`<li>${E(x)}</li>`).join("")}</ol><span class="trap">${E(trap)}</span>${ui.subj==="m"&&MX[n]?mxHTML(MX[n]):""}${ex.length?`<h4>Past paper examples (${ex.length})</h4><div class="ex">${ex.map(([c,d,qu,mu])=>`<code>${esc(c)}</code><span>${esc(d)}</span><span class="pp">${exLinks(c,qu,mu)}</span>`).join("")}</div>`:""}</div>${T?deckHTML(T):""}</div>`}
+  const E=ui.subj==="m"?mfmt:esc;const _ok=ui.subj+"|"+n;return `<details class="qtd" data-qto="${esc(_ok)}"${QTO.has(_ok)?" open":""}><summary><span class="cv">▶</span><b>${esc(n)}</b><span class="sa">${E(ask)}</span><span class="sn">${ex.length?ex.length+" PPQ":""}</span></summary><div class="qt${T?" has-deck":""}"><div class="qi"><b>${esc(n)}</b><span class="ask">${E(ask)}</span><h4>How to answer</h4><ol>${steps.map(x=>`<li>${E(x)}</li>`).join("")}</ol><span class="trap">${E(trap)}</span>${ui.subj==="m"&&MX[n]?mxHTML(MX[n]):""}${ex.length?`<h4>Past paper examples (${ex.length})</h4><div class="ex">${ex.map(([c,d,qu,mu])=>`<code>${esc(c)}</code><span>${esc(d)}</span><span class="pp">${exLinks(c,qu,mu)}</span>`).join("")}</div>`:""}</div>${T?deckHTML(T):""}</div></details>`}
 function srcs(l){const g={};for(const [lab,u] of l){const [src,kind]=lab.split(" ");(g[src]=g[src]||[]).push([kind,u])}
   return Object.entries(g).map(([src,ls])=>`<span class="src">${esc(src)}${ls.map(([k,u])=>`<a class="lk" href="${esc(u)}" target="_blank" rel="noopener">${esc(k)}</a>`).join("")}</span>`).join("")}
 function updateTotals(){
@@ -2198,6 +2198,14 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-wbtool]");
   document.addEventListener("pointermove",e=>{if(!cur||e.target!==cur.c)return;const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];for(const ev of evs){const [a,b]=pt(cur.c,ev);cur.x.beginPath();cur.x.moveTo(cur.last[0],cur.last[1]);cur.x.lineTo(a,b);cur.x.stroke();cur.last=[a,b]}});
   const end=()=>{if(!cur)return;try{const _id=cur.c.parentNode.dataset.wb;WB[_id]=cur.c.toDataURL();wbPersist(_id)}catch(_){}cur=null};
   document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end)})();
+
+/*QTJS*/
+var QTO=new Set();try{(JSON.parse(localStorage.getItem("qto:v1")||"[]")||[]).forEach(k=>QTO.add(k))}catch(_){}
+document.addEventListener("toggle",e=>{const d=e.target;if(!d.matches||!d.matches("details.qtd"))return;const k=d.dataset.qto;if(d.open)QTO.add(k);else QTO.delete(k);try{localStorage.setItem("qto:v1",JSON.stringify([...QTO].slice(-300)))}catch(_){}},true);
+function thPaint(){const b=document.getElementById("thb");if(!b)return;const lt=document.documentElement.classList.contains("lt");b.textContent=lt?"☾ Dark mode":"☀ Light mode"}
+document.addEventListener("click",e=>{if(!e.target.closest("#thb"))return;const r=document.documentElement;const lt=r.classList.contains("lt");r.classList.toggle("lt",!lt);r.classList.toggle("dk",lt);try{localStorage.setItem("ui.theme",lt?"dk":"lt")}catch(_){}thPaint()});
+thPaint();
+/*/QTJS*/
 /*PERSIST*/
 var wbDb=null,wbUid=null,wbSubs={},wbTm={},SES={},sesRef=null,sesT=null;
 try{SES=JSON.parse(localStorage.getItem("fcses:v1")||"{}")||{}}catch(_){SES={}}
