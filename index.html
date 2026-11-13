@@ -927,8 +927,8 @@ function fcSetup(){const r=FS.r,L=fcList(r);const cnt=d=>L.filter(c=>String(c[0]
   <div class="meta"><span>${Math.round(f*L.length)} / ${L.length} known</span><span>${Math.round(f*100)}%</span></div><div class="bar"><i style="width:${Math.round(f*100)}%"></i></div>
   <div class="chips">${fdKeys(r).filter(d=>cnt(d)).map(d=>`<button data-fd="${d}" aria-pressed="${!!FS.d[d]}">${esc(fdLab(r,d))} · ${cnt(d)}</button>`).join("")}</div>
   <div class="chips"><button data-fo="0" aria-pressed="${!FS.only}">All cards</button><button data-fo="1" aria-pressed="${!!FS.only}">Only ones I don't know</button></div>
-  <button class="pri" data-fx="start" ${pool.length?"":"disabled"}>${pool.length?`Start · ${pool.length} cards`:"Nothing left, you know them all"}</button></div>`}
-function fcStart(list){for(let i=list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]]}FS.q=list;FS.pos=0;FS.show=false;FS.res=[];fcCard()}
+  ${fsResumeBtn()}<button class="pri" data-fx="start" ${pool.length?"":"disabled"}>${pool.length?`Start · ${pool.length} cards`:"Nothing left, you know them all"}</button></div>`}
+function fcStart(list){for(let i=list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]]}FS.q=list;FS.pos=0;FS.show=false;FS.res=[];fsSave();fcCard()}
 function fcCard(){const r=FS.r,L=fcList(r);if(FS.pos>=FS.q.length)return fcSum();const i=FS.q[FS.pos],c=L[i];
   const pts=String(c[2]).split("\n").filter(x=>x.trim());
   document.getElementById("fcd").innerHTML=`<div class="fw"><div class="fh"><b>Spec ${esc(r.sp)} flashcards</b><button data-fx="end">End</button></div>
@@ -936,8 +936,8 @@ function fcCard(){const r=FS.r,L=fcList(r);if(FS.pos>=FS.q.length)return fcSum()
   <div class="card" id="fcard"><span class="stamp k" id="sk">KNOW IT</span><span class="stamp g" id="sg">AGAIN</span><span class="kind">${esc(fdLab(r,c[0]))}</span><div class="q">${r.k[0]==="m"?mfmt(c[1]):esc(c[1])}</div>${r.k[0]!=="m"&&c[3]?`<div class="fcv bsc${FS.show?"":" bo"}">${c[3]}</div>`:""}
   ${FS.show?`<div class="a">${r.k[0]==="m"?(c[3]?`<div class="fcv">${c[3]}</div>`:"")+`<ol class="mst">${pts.map(p=>`<li${p.startsWith("→")?' class="ans"':""}>${mfmt(p)}</li>`).join("")}</ol>`:pts.length>1?`<ul>${pts.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`:esc(pts[0]||"")}</div><div class="hint">Swipe right if you knew it, left if not</div>`:`<div class="hint">Tap to show the answer</div>`}</div>
   <div class="acts"><button class="no" data-fa="0">← Again</button><button class="yes" data-fa="1">Know it →</button></div></div>`;fcSwipe()}
-function fcDecide(k){const i=FS.q[FS.pos];const id=fcId(FS.r,i);const v=fcs[id]||[0,0,0];if(k)v[0]++;else v[1]++;v[2]=k?1:0;fcs[id]=v;FS.res.push([i,k]);FS.pos++;FS.show=false;fcSave();fcCard()}
-function fcSum(){const r=FS.r;const kn=FS.res.filter(x=>x[1]).length,ag=FS.res.length-kn;const f=fcKnown(r);
+function fcDecide(k){const i=FS.q[FS.pos];const id=fcId(FS.r,i);const v=fcs[id]||[0,0,0];if(k)v[0]++;else v[1]++;v[2]=k?1:0;fcs[id]=v;FS.res.push([i,k]);FS.pos++;FS.show=false;fcSave();fsSave();fcCard()}
+function fcSum(){fsDone();const r=FS.r;const kn=FS.res.filter(x=>x[1]).length,ag=FS.res.length-kn;const f=fcKnown(r);
   document.getElementById("fcd").innerHTML=`<div class="fw"><div class="fh"><b>Spec ${esc(r.sp)} done</b><button data-fx="close">Close</button></div>
   <div class="sum"><div class="big">${kn} / ${FS.res.length}</div><div style="color:var(--muted)">known this round · ${ag} to go again</div><div class="bar" style="margin:14px 0 6px"><i style="width:${Math.round(f*100)}%"></i></div><div class="meta"><span>Deck known</span><span>${Math.round(f*100)}%</span></div></div>
   <div class="acts"><button data-fx="redo" ${ag?"":"disabled"}>Redo the ${ag} again cards</button><button class="pri" data-fx="setup">Back to deck</button></div></div>`}
@@ -955,7 +955,7 @@ document.addEventListener("click",e=>{const o=e.target.closest("[data-fc]");if(o
   if(t.dataset.fd){FS.d[t.dataset.fd]=FS.d[t.dataset.fd]?0:1;fcPref();fcSetup()}
   else if(t.dataset.fo){FS.only=+t.dataset.fo;fcPref();fcSetup()}
   else if(t.dataset.fa){fcDecide(t.dataset.fa==="1")}
-  else{const x=t.dataset.fx;if(x==="close")fcClose();else if(x==="start")fcStart(fcPool());else if(x==="end")fcSum();else if(x==="setup")fcSetup();else if(x==="redo")fcStart(FS.res.filter(r=>!r[1]).map(r=>r[0]))}});
+  else{const x=t.dataset.fx;if(x==="close")fcClose();else if(x==="start")fcStart(fcPool());else if(x==="resume")fsResume();else if(x==="end")fcSum();else if(x==="setup")fcSetup();else if(x==="redo")fcStart(FS.res.filter(r=>!r[1]).map(r=>r[0]))}});
 document.addEventListener("keydown",e=>{if(!FS||document.getElementById("fcd").hidden)return;
   if(e.key==="Escape"){fcClose();return}if(!FS.q||FS.pos>=FS.q.length||!document.getElementById("fcard"))return;
   if(e.key===" "){e.preventDefault();FS.show=!FS.show;fcCard()}else if(e.key==="ArrowRight")fcDecide(true);else if(e.key==="ArrowLeft")fcDecide(false)},true);
@@ -2183,10 +2183,10 @@ window.addEventListener("resize",setHH);new ResizeObserver(setHH).observe(docume
 render();
 
 /* ---------- mini whiteboard beside each question type: pen and eraser only ---------- */
-const WB={};const WBT={};
+const WB={};const WBT={};const WBTS={};try{const o=JSON.parse(localStorage.getItem("wbd:v1")||"{}");for(const k in o){WB[k]=o[k].d;WBTS[k]=o[k].t}}catch(_){}
 function wbHTML(id){const t=WBT[id]||"pen";return `<div class="wb${t==="er"?" er":""}" data-wb="${esc(id)}"><span class="wbl">Working out</span><div class="wbt"><button type="button" data-wbtool="pen" aria-pressed="${t==="pen"}">Pen</button><button type="button" data-wbtool="er" aria-pressed="${t==="er"}">Eraser</button></div><canvas class="wbc" aria-label="Whiteboard for quick working out"></canvas></div>`}
 function wbFit(c){const r=c.getBoundingClientRect();if(!r.width)return;const d=window.devicePixelRatio||1;const w=Math.round(r.width*d),h=Math.round(r.height*d);if(c.width===w&&c.height===h)return;const id=c.parentNode.dataset.wb;c.width=w;c.height=h;const x=c.getContext("2d");x.setTransform(d,0,0,d,0,0);x.lineCap="round";x.lineJoin="round";
-  const src=WB[id];if(src){const im=new Image();im.onload=()=>{x.save();x.setTransform(1,0,0,1,0,0);x.drawImage(im,0,0,c.width,c.height);x.restore()};im.src=src}}
+  wbSub(id);const src=WB[id];if(src){const im=new Image();im.onload=()=>{x.save();x.setTransform(1,0,0,1,0,0);x.drawImage(im,0,0,c.width,c.height);x.restore()};im.src=src}}
 function wbInitAll(){document.querySelectorAll(".wbc").forEach(wbFit)}
 new MutationObserver(()=>{if(document.querySelector(".wbc"))requestAnimationFrame(wbInitAll)}).observe(document.body,{childList:true,subtree:true});
 window.addEventListener("resize",()=>{document.querySelectorAll(".wbc").forEach(c=>{const id=c.parentNode.dataset.wb;if(c.width)WB[id]=c.toDataURL();c.width=0;wbFit(c)})});
@@ -2196,8 +2196,31 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-wbtool]");
   document.addEventListener("pointerdown",e=>{const c=e.target.closest(".wbc");if(!c)return;wbFit(c);e.preventDefault();const w=c.parentNode;const er=w.classList.contains("er");const x=c.getContext("2d");
     x.globalCompositeOperation=er?"destination-out":"source-over";x.strokeStyle="#f4f5f7";x.lineWidth=er?22:(e.pointerType==="pen"?2.2:2.6);const [a,b]=pt(c,e);x.beginPath();x.moveTo(a,b);x.lineTo(a+.01,b+.01);x.stroke();cur={c,x,last:[a,b]};try{c.setPointerCapture(e.pointerId)}catch(_){}});
   document.addEventListener("pointermove",e=>{if(!cur||e.target!==cur.c)return;const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];for(const ev of evs){const [a,b]=pt(cur.c,ev);cur.x.beginPath();cur.x.moveTo(cur.last[0],cur.last[1]);cur.x.lineTo(a,b);cur.x.stroke();cur.last=[a,b]}});
-  const end=()=>{if(!cur)return;try{WB[cur.c.parentNode.dataset.wb]=cur.c.toDataURL()}catch(_){}cur=null};
+  const end=()=>{if(!cur)return;try{const _id=cur.c.parentNode.dataset.wb;WB[_id]=cur.c.toDataURL();wbPersist(_id)}catch(_){}cur=null};
   document.addEventListener("pointerup",end);document.addEventListener("pointercancel",end)})();
+/*PERSIST*/
+var wbDb=null,wbUid=null,wbSubs={},wbTm={},SES={},sesRef=null,sesT=null;
+try{SES=JSON.parse(localStorage.getItem("fcses:v1")||"{}")||{}}catch(_){SES={}}
+function wbLocal(){try{const o={};for(const k in WB)if(WB[k])o[k]={d:WB[k],t:WBTS[k]||0};localStorage.setItem("wbd:v1",JSON.stringify(o))}catch(_){}}
+function wbDocId(id){return "wb_"+String(id).replace(/[^A-Za-z0-9_\-.]/g,"_").slice(0,180)}
+function wbPersist(id){WBTS[id]=Date.now();wbLocal();clearTimeout(wbTm[id]);wbTm[id]=setTimeout(()=>{if(wbDb&&wbUid)wbDb.doc("data/users/"+wbUid+"/"+wbDocId(id)).set({img:WB[id]||"",t:WBTS[id]}).catch(()=>{})},1200)}
+function wbRedraw(id){document.querySelectorAll(".wb").forEach(w=>{if(w.dataset.wb!==id)return;const c=w.querySelector(".wbc");if(c){c.width=0;wbFit(c)}})}
+function wbSub(id){if(!wbDb||!wbUid||!id||wbSubs[id])return;wbSubs[id]=1;try{wbDb.doc("data/users/"+wbUid+"/"+wbDocId(id)).onSnapshot(s=>{if(s.metadata&&s.metadata.hasPendingWrites)return;if(!s.exists){if(WB[id])wbPersist(id);return}const r=s.data()||{};if((r.t||0)>(WBTS[id]||0)){WB[id]=r.img||"";WBTS[id]=r.t;wbLocal();wbRedraw(id)}},()=>{})}catch(_){}}
+function sesPush(){try{localStorage.setItem("fcses:v1",JSON.stringify(SES))}catch(_){}clearTimeout(sesT);sesT=setTimeout(()=>{if(sesRef)sesRef.set({s:SES,updated:Date.now()}).catch(()=>{})},700)}
+function fsSave(){if(!FS||!FS.r||!FS.q)return;SES[FS.r.k]={q:FS.q,pos:FS.pos,res:FS.res,t:Date.now()};sesPush()}
+function fsDone(){if(!FS||!FS.r)return;SES[FS.r.k]={done:1,t:Date.now()};sesPush()}
+function fsResumeBtn(){const s=FS&&FS.r&&SES[FS.r.k];if(!s||s.done||!s.q||s.pos>=s.q.length)return "";const kn=(s.res||[]).filter(x=>x[1]).length,ag=(s.res||[]).length-kn;return `<button class="pri" data-fx="resume" style="margin-bottom:8px">Resume · card ${s.pos+1} of ${s.q.length} · ${kn} known · ${ag} again</button>`}
+function fsResume(){const s=SES[FS.r.k];if(!s||!s.q)return;const L=fcList(FS.r);FS.q=s.q.filter(i=>i<L.length);FS.pos=Math.min(s.pos,FS.q.length);FS.res=s.res||[];FS.show=false;fcCard()}
+(async()=>{try{if(!window.claude?.use)return;const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);const id=db&&user&&await user.id();if(!id)return;wbDb=db;wbUid=id;
+ document.querySelectorAll(".wb").forEach(w=>wbSub(w.dataset.wb));
+ sesRef=db.doc("data/users/"+id+"/fcsession");
+ sesRef.onSnapshot(s=>{if(s.metadata&&s.metadata.hasPendingWrites)return;const r=s.exists?((s.data()||{}).s||{}):{};let ch=false,push=false;
+  for(const k in r){if(!SES[k]||(r[k].t||0)>(SES[k].t||0)){SES[k]=r[k];ch=true}}
+  for(const k in SES){if(!r[k]||(SES[k].t||0)>(r[k].t||0))push=true}
+  if(ch){try{localStorage.setItem("fcses:v1",JSON.stringify(SES))}catch(_){}if(FS&&!FS.q&&!document.getElementById("fcd").hidden)fcSetup()}
+  if(push)sesPush()},()=>{})}catch(_){}})();
+/*/PERSIST*/
+
 
 /* ---------- keep scroll position when the calendar or tracker repaints (drag and drop) ---------- */
 function keepScroll(fn){return function(){const root=document.getElementById("calp");const sv=[];
